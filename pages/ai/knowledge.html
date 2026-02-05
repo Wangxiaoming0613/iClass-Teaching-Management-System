@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>知识库管理 - iClass智慧课堂</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <style>
+        /* Custom scrollbar */
+        .content-container::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+        .content-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .content-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .content-container::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        .text-clamp-1 {
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            white-space: normal;
+        }
+
+        /* Card Hover Effect */
+        .kb-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .kb-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+
+        @keyframes kb-fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .grid-fade-in {
+            animation: kb-fade-in 300ms ease-in-out;
+        }
+        
+        /* Image Overlay Gradient */
+        .cover-overlay {
+            background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 100%);
+        }
+
+        /* Checkmark Animation */
+        .checkmark-path {
+            stroke-dasharray: 48;
+            stroke-dashoffset: 48;
+            animation: draw-check 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards 0.2s;
+        }
+        
+        @keyframes draw-check {
+            to { stroke-dashoffset: 0; }
+        }
+        
+        @keyframes scale-up-elastic {
+            0% { transform: scale(0); opacity: 0; }
+            60% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .icon-circle-animate {
+            animation: scale-up-elastic 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+    </style>
+</head>
+<body class="p-4 bg-gray-50 h-screen overflow-hidden font-sans text-gray-700 flex flex-col">
+    <!-- Main Container -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex flex-col flex-1 h-full overflow-hidden">
+        
+        <!-- Filter Section -->
+        <div class="flex flex-wrap items-center justify-between mb-4 shrink-0">
+            <!-- Left Side: Filters and Action Buttons -->
+            <div class="flex flex-wrap items-center gap-3">
+                <!-- Search Input -->
+                <div class="relative group">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors"></i>
+                    <input type="text" id="search-input" placeholder="请输入知识库名称" class="bg-gray-50 border border-gray-200 text-gray-700 py-2 pl-10 pr-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 w-64 text-sm transition-all">
+                </div>
+
+                <!-- Action Buttons -->
+                <button onclick="handleSearch()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-5 rounded-lg text-sm transition-all duration-200 shadow-sm hover:shadow">
+                    查询
+                </button>
+                <button onclick="handleReset()" class="bg-white hover:bg-gray-50 text-gray-600 border border-gray-300 font-medium py-2 px-5 rounded-lg text-sm transition-all duration-200 shadow-sm hover:shadow">
+                    重置
+                </button>
+            </div>
+
+            <!-- Right Side: Empty -->
+            <div></div>
+        </div>
+
+        <!-- Content Section (Grid) -->
+        <!-- Added pt-2 to prevent card hover animation (translateY) from being clipped by overflow-hidden -->
+        <div class="content-container flex-1 rounded-lg relative overflow-y-auto p-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="knowledge-grid">
+                <!-- Data will be populated by JS -->
+            </div>
+        </div>
+
+        <!-- Pagination Section -->
+        <div class="flex flex-wrap items-center justify-between pt-3 mt-auto shrink-0" id="pagination-container">
+            <!-- Pagination generated by JS -->
+        </div>
+    </div>
+
+    <!-- Edit/Add Modal -->
+    <div id="edit-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-[100] backdrop-blur-sm transition-opacity opacity-0">
+        <div class="bg-white rounded-xl shadow-2xl w-[500px] transform scale-95 transition-transform duration-200" id="edit-modal-content">
+            <div class="flex justify-between items-center p-5 border-b border-gray-100">
+                <h3 class="text-lg font-bold text-gray-800" id="modal-title">新增AI知识库</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 space-y-5">
+                <input type="hidden" id="edit-id">
+                
+                <!-- Name -->
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">
+                        <span class="text-red-500 mr-1">*</span>知识库名称
+                    </label>
+                    <input type="text" id="edit-title" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm" placeholder="请输入知识库名称">
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">知识库简介</label>
+                    <input type="text" id="edit-desc" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm" placeholder="请输入知识库简介">
+                </div>
+
+                <!-- Cover Upload -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">封面上传</label>
+                    <div id="cover-upload-area" class="relative group cursor-pointer" onclick="document.getElementById('cover-input').click()">
+                        <input type="file" id="cover-input" class="hidden" accept="image/*" onchange="handleFileSelect(this)">
+                        
+                        <!-- Upload Placeholder -->
+                        <div id="upload-placeholder" class="border-2 border-dashed border-gray-300 rounded-lg w-full aspect-[280/144] flex flex-col items-center justify-center hover:border-blue-500 hover:bg-blue-50 transition-all bg-white">
+                            <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                                <i class="fas fa-cloud-upload-alt text-blue-500 text-lg"></i>
+                            </div>
+                            <p class="text-sm text-gray-700 font-medium mb-1">点击或拖拽文件到此处上传</p>
+                            <p class="text-xs text-gray-400">支持 JPG, PNG, WebP 格式</p>
+                        </div>
+
+                        <!-- Preview Container -->
+                        <div id="upload-preview-container" class="hidden w-full aspect-[280/144] rounded-lg overflow-hidden relative group border border-gray-200">
+                            <img id="upload-preview-img" src="" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <span class="text-white text-sm font-medium"><i class="fas fa-edit mr-1"></i>更换封面</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-5 border-t border-gray-100 flex justify-end gap-3">
+                <button onclick="closeModal()" class="px-5 py-2 text-sm text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors font-medium">取消</button>
+                <button onclick="saveData()" class="px-5 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors font-medium shadow-sm hover:shadow">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Crop Modal -->
+    <div id="crop-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-[120] backdrop-blur-sm transition-opacity opacity-0">
+        <div class="bg-white rounded-xl shadow-2xl w-[800px] h-[600px] flex flex-col transform scale-95 transition-transform duration-200" id="crop-modal-content">
+            <div class="flex justify-between items-center p-5 border-b border-gray-100 shrink-0">
+                <h3 class="text-lg font-bold text-gray-800">裁剪封面图片</h3>
+                <button onclick="closeCropModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="flex-1 bg-gray-900 overflow-hidden relative p-4">
+                <div class="h-full w-full">
+                    <img id="crop-image" src="" class="block max-w-full">
+                </div>
+            </div>
+
+            <!-- Toolbar -->
+            <div class="bg-gray-800 p-3 flex justify-center gap-4 border-t border-gray-700 shrink-0">
+                <button type="button" onclick="cropper.zoom(0.1)" class="text-white hover:text-blue-400 transition-colors p-2" title="放大">
+                    <i class="fas fa-search-plus text-lg"></i>
+                </button>
+                <button type="button" onclick="cropper.zoom(-0.1)" class="text-white hover:text-blue-400 transition-colors p-2" title="缩小">
+                    <i class="fas fa-search-minus text-lg"></i>
+                </button>
+                <div class="w-px bg-gray-600 mx-2"></div>
+                <button type="button" onclick="cropper.rotate(-90)" class="text-white hover:text-blue-400 transition-colors p-2" title="向左旋转">
+                    <i class="fas fa-undo text-lg"></i>
+                </button>
+                <button type="button" onclick="cropper.rotate(90)" class="text-white hover:text-blue-400 transition-colors p-2" title="向右旋转">
+                    <i class="fas fa-redo text-lg"></i>
+                </button>
+                <div class="w-px bg-gray-600 mx-2"></div>
+                <button type="button" onclick="cropper.reset()" class="text-white hover:text-blue-400 transition-colors p-2" title="重置">
+                    <i class="fas fa-sync-alt text-lg"></i>
+                </button>
+            </div>
+
+            <div class="p-5 border-t border-gray-100 flex justify-end gap-3 shrink-0 bg-white rounded-b-xl">
+                <button onclick="closeCropModal()" class="px-5 py-2 text-sm text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors font-medium">取消</button>
+                <button onclick="confirmCrop()" class="px-5 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors font-medium shadow-sm hover:shadow">确认剪裁</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-[110] backdrop-blur-sm transition-opacity opacity-0">
+        <div class="bg-white rounded-xl shadow-2xl w-[350px] transform scale-95 transition-transform duration-200" id="delete-modal-content">
+            <div class="p-6 text-center">
+                <!-- Icon -->
+                <div class="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-500 text-xl"></i>
+                </div>
+                
+                <!-- Title -->
+                <h3 class="text-lg font-bold text-gray-800 mb-2">确认删除</h3>
+                
+                <!-- Message -->
+                <p class="text-sm text-gray-500 mb-6">您确定要删除该知识库吗？此操作无法撤销。</p>
+                
+                <!-- Buttons -->
+                <div class="flex justify-center gap-3">
+                    <button onclick="closeDeleteModal()" class="px-4 py-2 text-sm text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors font-medium">取消</button>
+                    <button onclick="confirmDelete()" class="px-4 py-2 text-sm text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors font-medium shadow-sm hover:shadow">删除</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Guide Modal -->
+    <div id="guide-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-[130] backdrop-blur-sm transition-opacity opacity-0 duration-300">
+        <div class="bg-white rounded-xl shadow-2xl w-[400px] transform scale-95 transition-all duration-300 cubic-bezier(0.34, 1.56, 0.64, 1)" id="guide-modal-content">
+            <div class="p-8 text-center">
+                <div class="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-6 icon-circle-animate">
+                    <svg class="w-8 h-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" class="checkmark-path" />
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">知识库创建成功</h3>
+                <p class="text-gray-500 mb-8">您已成功创建知识库，快去添加知识点吧！</p>
+                <div class="flex flex-col gap-3">
+                    <button onclick="navigateToNewKnowledgeBase()" class="w-full py-2.5 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors font-medium shadow-sm hover:shadow">
+                        前往添加知识点
+                    </button>
+                    <button onclick="closeGuideModal()" class="w-full py-2.5 text-sm text-gray-500 hover:text-gray-700 bg-transparent hover:bg-gray-50 rounded-lg transition-colors font-medium">
+                        暂不添加
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-4 right-4 bg-white border border-green-100 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-lg p-4 flex items-center gap-3 transform translate-x-[120%] transition-transform duration-300 z-[100]">
+        <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-500 shrink-0">
+            <i class="fas fa-check"></i>
+        </div>
+        <div>
+            <h4 class="font-bold text-gray-800 text-sm">操作成功</h4>
+            <p class="text-xs text-gray-500 mt-0.5" id="toast-msg">保存成功</p>
+        </div>
+    </div>
+
+    <script>
+        // --- Data Generation ---
+        let kbList = [];
+        let filteredData = [];
+        const TOTAL_ITEMS = 71;
+
+        // Expanded list of realistic course names for generation
+        const SUBJECTS = [
+            "Java程序设计", "Python语言基础", "C++高级编程", "Web前端开发", "Node.js全栈开发",
+            "数据结构与算法", "计算机网络原理", "操作系统", "计算机组成原理", "数据库系统概论",
+            "软件工程", "UML建模", "设计模式", "软件测试技术", "敏捷开发方法",
+            "人工智能导论", "机器学习基础", "深度学习应用", "自然语言处理", "计算机视觉",
+            "大数据技术原理", "云计算基础", "分布式系统", "容器化技术", "微服务架构",
+            "网络安全基础", "Web渗透测试", "密码学原理", "区块链技术应用", "物联网导论",
+            "嵌入式系统设计", "单片机原理", "数字逻辑电路", "模拟电子技术", "电路分析基础",
+            "信号与系统", "数字信号处理", "通信原理", "移动通信技术", "光纤通信",
+            "高等数学", "线性代数", "概率论与数理统计", "离散数学", "复变函数",
+            "大学物理", "量子力学导论", "大学化学", "生物信息学", "环境科学概论",
+            "管理学原理", "微观经济学", "宏观经济学", "会计学基础", "财务管理",
+            "市场营销学", "电子商务概论", "国际贸易实务", "人力资源管理", "供应链管理",
+            "心理学导论", "社会心理学", "教育心理学", "发展心理学", "认知心理学",
+            "法学基础", "知识产权法", "合同法", "劳动法", "商法概论",
+            "视觉传达设计", "UI用户界面设计", "UX用户体验设计", "平面设计基础", "色彩构成",
+            "三维建模基础", "动画制作原理", "数字媒体艺术", "摄影艺术", "视频剪辑与特效",
+            "英语口语", "商务英语", "科技英语翻译", "跨文化交际", "学术写作"
+        ];
+        
+        const PREFIXES = ["高级", "实用", "现代", "企业级", "趣味", "应用", "基础", "进阶", "核心"];
+        const SUFFIXES = ["实战", "案例分析", "项目开发", "实验", "专题研究", "精讲", "入门", "原理"];
+
+        // Pre-defined high-quality images to ensure they look good (using Unsplash source)
+        const coverImages = [
+            'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=500&q=80', // Tech/Cyber
+            'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=500&q=80', // Code
+            'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=500&q=80', // Art
+            'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=500&q=80', // Hardware
+            'https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?auto=format&fit=crop&w=500&q=80', // Circuit
+            'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=500&q=80', // Books
+            'https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=500&q=80', // UI
+            'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=500&q=80', // Camera
+            'https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=500&q=80', // Science
+            'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=500&q=80', // Plane
+            'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=500&q=80', // Startup
+            'https://images.unsplash.com/photo-1559067096-49ebca3406aa?auto=format&fit=crop&w=500&q=80', // Simulator
+        ];
+
+        function getTimeValue(item) {
+            if (item && item.updatedAt) return item.updatedAt;
+            const raw = item && item.time ? item.time : '';
+            const parsed = raw ? Date.parse(raw.replace(' ', 'T')) : NaN;
+            return Number.isNaN(parsed) ? 0 : parsed;
+        }
+
+        function initData() {
+            // Changed key to v4 to force refresh with new data structure and sorting
+            const stored = localStorage.getItem('iClass_kb_list_v4');
+            if (stored) {
+                kbList = JSON.parse(stored);
+            } else {
+                const uniqueTitles = new Set();
+                let attempts = 0;
+                
+                // Ensure "数字电视系统" is present
+                uniqueTitles.add("数字电视系统");
+
+                // First fill with base subjects
+                for (const subject of SUBJECTS) {
+                    uniqueTitles.add(subject);
+                }
+
+                // Then generate combinations until we have enough
+                while (uniqueTitles.size < TOTAL_ITEMS && attempts < 1000) {
+                    const subject = SUBJECTS[Math.floor(Math.random() * SUBJECTS.length)];
+                    const usePrefix = Math.random() > 0.5;
+                    let newTitle = "";
+                    
+                    if (usePrefix) {
+                        const prefix = PREFIXES[Math.floor(Math.random() * PREFIXES.length)];
+                        newTitle = prefix + subject;
+                    } else {
+                        const suffix = SUFFIXES[Math.floor(Math.random() * SUFFIXES.length)];
+                        newTitle = subject + suffix;
+                    }
+                    
+                    uniqueTitles.add(newTitle);
+                    attempts++;
+                }
+
+                // Convert Set to Array and take required amount
+                const titleArray = Array.from(uniqueTitles).slice(0, TOTAL_ITEMS);
+
+                for (let i = 0; i < titleArray.length; i++) {
+                    const title = titleArray[i];
+                    let time;
+                    
+                    // Make "数字电视系统" the most recent
+                    if (title === "数字电视系统") {
+                        time = new Date().toISOString().slice(0, 19).replace('T', ' ');
+                    } else {
+                        // Others are in the past
+                        const start = new Date(2023, 0, 1);
+                        const end = new Date(Date.now() - 86400000); // Yesterday
+                        time = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime())).toISOString().slice(0, 19).replace('T', ' ');
+                    }
+
+                    kbList.push({
+                        id: i + 1,
+                        title: title,
+                        desc: `${title}相关的课程知识库，包含教学大纲、课件、习题及参考资料。`,
+                        docCount: Math.floor(Math.random() * 100) + 1,
+                        time: time,
+                        cover: coverImages[i % coverImages.length],
+                        updatedAt: Date.parse(time.replace(' ', 'T')) || Date.now(),
+                        version: 1
+                    });
+                }
+                
+                // Sort by time descending (Newest first)
+                kbList.sort((a, b) => getTimeValue(b) - getTimeValue(a));
+
+                localStorage.setItem('iClass_kb_list_v4', JSON.stringify(kbList));
+            }
+            filteredData = [...kbList];
+        }
+
+        function getRandomDate() {
+            const start = new Date(2023, 0, 1);
+            const end = new Date();
+            const date = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+            return date.toISOString().slice(0, 19).replace('T', ' ');
+        }
+
+        // --- State Management ---
+        let currentPage = 1;
+        let pageSize = 12; // Changed default to 12 as requested
+        let currentDeleteId = null;
+        let cropper = null;
+        let tempCoverUrl = null; // Store the cropped image data URL
+        const LIST_STATE_KEY = 'knowledge_list_state_v1';
+        const SYNC_EVENT_KEY = 'kb_sync_event_v1';
+        const SYNC_APPLIED_KEY = 'kb_sync_applied_v1';
+        let isRestoring = false;
+        let scrollRafId = null;
+        
+        // New Knowledge Base Temp Storage
+        let newKbId = null;
+        let newKbTitle = null;
+
+        function buildListSnapshot(item) {
+            return {
+                title: item && item.title ? item.title : '',
+                desc: item && item.desc ? item.desc : '',
+                cover: item && item.cover ? item.cover : '',
+                status: item && item.status ? item.status : '',
+                time: item && item.time ? item.time : ''
+            };
+        }
+
+        function isListSnapshotEqual(a, b) {
+            return (a.title || '') === (b.title || '') &&
+                   (a.desc || '') === (b.desc || '') &&
+                   (a.cover || '') === (b.cover || '') &&
+                   (a.status || '') === (b.status || '') &&
+                   (a.time || '') === (b.time || '');
+        }
+
+        function readSyncEvent() {
+            const raw = localStorage.getItem(SYNC_EVENT_KEY);
+            if (!raw) return null;
+            try {
+                return JSON.parse(raw);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function applySyncEvent(payload, force = false) {
+            if (!payload || !payload.id) return false;
+            const start = performance.now();
+            const eventTs = payload.ts || payload.updatedAt || Date.now();
+            const shouldJumpFirst = !!payload.returnToList;
+            const lastApplied = parseInt(localStorage.getItem(SYNC_APPLIED_KEY)) || 0;
+            if (eventTs <= lastApplied) return false;
+            const stored = localStorage.getItem('iClass_kb_list_v4');
+            if (!stored) return false;
+            let list;
+            try {
+                list = JSON.parse(stored);
+            } catch (e) {
+                return false;
+            }
+            const index = list.findIndex(item => item.id == payload.id);
+            if (index === -1) return false;
+            const latest = list[index];
+            const next = { ...latest };
+            const data = payload.data || {};
+            if (data.title !== undefined) next.title = data.title;
+            if (data.desc !== undefined) next.desc = data.desc;
+            if (data.cover !== undefined) next.cover = data.cover;
+            if (data.status !== undefined) next.status = data.status;
+            if (data.docCount !== undefined) next.docCount = data.docCount;
+            if (payload.time) next.time = payload.time;
+            if (payload.updatedAt) next.updatedAt = payload.updatedAt;
+            if (payload.version) next.version = payload.version;
+            const latestSnapshot = buildListSnapshot(latest);
+            const nextSnapshot = buildListSnapshot(next);
+            const hasConflict = payload.version && latest.version && payload.version < latest.version;
+            const hasChange = !isListSnapshotEqual(latestSnapshot, nextSnapshot);
+            if (hasConflict && !shouldJumpFirst) {
+                localStorage.setItem(SYNC_APPLIED_KEY, String(eventTs));
+                return false;
+            }
+            if (hasChange) {
+                list[index] = next;
+            }
+            if (!hasChange && !shouldJumpFirst) {
+                localStorage.setItem(SYNC_APPLIED_KEY, String(eventTs));
+                return false;
+            }
+            if (hasChange || shouldJumpFirst) {
+                list.sort((a, b) => getTimeValue(b) - getTimeValue(a));
+                localStorage.setItem('iClass_kb_list_v4', JSON.stringify(list));
+                kbList = list;
+            }
+            const query = document.getElementById('search-input').value.trim().toLowerCase();
+            filteredData = query ? kbList.filter(item => item.title.toLowerCase().includes(query)) : [...kbList];
+            if (shouldJumpFirst) {
+                currentPage = 1;
+            } else {
+                const totalPages = calculateTotalPages();
+                if (currentPage > totalPages) {
+                    currentPage = totalPages || 1;
+                }
+            }
+            renderGrid();
+            renderPagination();
+            if (shouldJumpFirst) {
+                const container = document.querySelector('.content-container');
+                if (container) {
+                    container.scrollTo({ top: 0, behavior: 'auto' });
+                }
+                persistState('replace');
+            }
+            localStorage.setItem(SYNC_APPLIED_KEY, String(eventTs));
+            localStorage.removeItem(SYNC_EVENT_KEY);
+            const duration = performance.now() - start;
+            if (duration > 500) {
+                console.warn(`同步更新耗时 ${Math.round(duration)}ms`);
+            }
+            return true;
+        }
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initData();
+            if (!restoreFromUrlOrStorage('auto')) {
+                renderGrid();
+                renderPagination();
+                persistState('replace');
+            }
+            const pending = readSyncEvent();
+            if (pending) {
+                applySyncEvent(pending, true);
+            }
+            
+            // Add input event listener to clear error styles
+            document.getElementById('edit-title').addEventListener('input', function() {
+                this.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-200');
+                this.classList.add('border-gray-200', 'focus:border-blue-500', 'focus:ring-blue-100');
+            });
+
+            const container = document.querySelector('.content-container');
+            if (container) {
+                container.addEventListener('scroll', handleScrollPersist);
+            }
+        });
+
+        window.addEventListener('pageshow', () => {
+            initData();
+            if (!restoreFromUrlOrStorage('smooth')) {
+                renderGrid();
+                renderPagination();
+                persistState('replace');
+            }
+            const pending = readSyncEvent();
+            if (pending) {
+                applySyncEvent(pending, true);
+            }
+        });
+
+        window.addEventListener('popstate', () => {
+            restoreFromUrlOrStorage('smooth');
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                const pending = readSyncEvent();
+                if (pending) {
+                    applySyncEvent(pending, true);
+                }
+            }
+        });
+
+        window.addEventListener('storage', (e) => {
+            if (e.key === SYNC_EVENT_KEY) {
+                const payload = readSyncEvent();
+                if (payload) {
+                    applySyncEvent(payload);
+                }
+            }
+        });
+
+        // --- Helper ---
+        function calculateTotalPages() {
+            const isSearchActive = document.getElementById('search-input').value.trim() !== '';
+            if (filteredData.length === 0) return 0;
+            
+            if (!isSearchActive) {
+                // First page has (pageSize - 1) items due to Add Card
+                const firstPageCapacity = pageSize - 1;
+                if (filteredData.length <= firstPageCapacity) return 1;
+                
+                return 1 + Math.ceil((filteredData.length - firstPageCapacity) / pageSize);
+            } else {
+                return Math.ceil(filteredData.length / pageSize);
+            }
+        }
+
+        // --- Rendering ---
+        function renderGrid() {
+            const gridContainer = document.getElementById('knowledge-grid');
+            gridContainer.innerHTML = '';
+            
+            const isSearchActive = document.getElementById('search-input').value.trim() !== '';
+            const showAddCard = currentPage === 1 && !isSearchActive;
+
+            // Add "New Knowledge Base" Card (Only on Page 1 and when not searching)
+            if (showAddCard) {
+                const addCard = document.createElement('div');
+                addCard.className = 'kb-card bg-gray-50 rounded-xl border-2 border-dashed border-gray-300 hover:border-blue-500 hover:bg-blue-50 flex flex-col items-center justify-center h-[280px] cursor-pointer group transition-all duration-300 relative';
+                addCard.onclick = openAddModal;
+                addCard.innerHTML = `
+                    <div class="w-16 h-16 rounded-full bg-white shadow-sm border border-gray-100 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:shadow-md transition-all duration-300 z-10">
+                        <i class="fas fa-plus text-2xl text-gray-400 group-hover:text-blue-600 transition-colors"></i>
+                    </div>
+                    <span class="text-gray-500 font-medium group-hover:text-blue-600 transition-colors z-10">新增知识库</span>
+                `;
+                gridContainer.appendChild(addCard);
+            }
+
+            // Calculate range
+            let start, end;
+            
+            if (!isSearchActive) {
+                // Adjusted logic for Add Card on Page 1
+                if (currentPage === 1) {
+                    start = 0;
+                    end = pageSize - 1;
+                } else {
+                    // Page 1 took (pageSize - 1) items
+                    // Subsequent pages take pageSize items
+                    start = (pageSize - 1) + (currentPage - 2) * pageSize;
+                    end = start + pageSize;
+                }
+            } else {
+                // Standard logic
+                start = (currentPage - 1) * pageSize;
+                end = start + pageSize;
+            }
+
+            const pageData = filteredData.slice(start, end);
+
+            pageData.forEach(kb => {
+                const card = document.createElement('div');
+                card.className = 'kb-card bg-white rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-100 overflow-hidden flex flex-col h-[280px] relative group';
+                
+                card.innerHTML = `
+                    <!-- Cover Image Area -->
+                    <div class="h-36 relative overflow-hidden group-hover:opacity-90 transition-opacity cursor-pointer" onclick="navigateToDetail(${kb.id})">
+                        <img src="${kb.cover}" alt="Cover" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        
+                        <!-- Glassmorphism Badge (Brighter Yellow) -->
+                        <div class="absolute top-3 right-3 px-3 py-1.5 rounded-lg backdrop-blur-xl bg-white/90 border border-white/60 shadow-sm flex items-center gap-1.5 z-10 hover:bg-white transition-colors">
+                            <i class="fas fa-file-alt text-yellow-500 text-xs drop-shadow-sm"></i>
+                            <span class="text-xs font-bold text-yellow-600 drop-shadow-sm">${kb.docCount} 文档</span>
+                        </div>
+
+                        <!-- Glassmorphism Transition Overlay (Adjusted Height & Gradient) -->
+                        <div class="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white via-white/60 to-transparent backdrop-blur-[1px]"></div>
+                    </div>
+
+                    <!-- Content Area (Added bg-white to fix border line bug) -->
+                    <div class="px-4 pt-1 pb-4 flex-1 flex flex-col relative z-10 -mt-2 bg-white cursor-pointer" onclick="navigateToDetail(${kb.id})">
+                        <h3 class="font-bold text-lg text-gray-800 mb-1 line-clamp-1 group-hover:text-blue-600 transition-colors relative z-20" title="${kb.title}">${kb.title}</h3>
+                        <p class="text-sm text-gray-500 line-clamp-2 leading-relaxed mb-3 relative z-20" title="${kb.desc}">${kb.desc}</p>
+                    </div>
+
+                    <!-- Footer Action Area (Redesigned - Precise Time) -->
+                    <div class="px-4 py-3 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between mt-auto shrink-0 gap-2">
+                        <!-- Left: Time Info -->
+                        <div class="flex items-center min-w-0">
+                            <div class="w-6 h-6 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center mr-2 shrink-0 group-hover:scale-110 transition-transform duration-300">
+                                <i class="far fa-clock text-[10px] text-emerald-500"></i>
+                            </div>
+                            <div class="flex flex-col justify-center min-w-0">
+                                <span class="text-[10px] text-gray-400 font-medium leading-none mb-1">最近更新</span>
+                                <div class="font-mono text-[11px] text-gray-600 font-medium tracking-tight whitespace-nowrap overflow-hidden text-ellipsis leading-none" title="修改时间：${kb.time}">
+                                    ${kb.time}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Right: Actions -->
+                        <div class="flex items-center space-x-1 opacity-80 group-hover:opacity-100 transition-opacity shrink-0">
+                            <button onclick="event.stopPropagation(); openEditModal(${kb.id})" class="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-green-600 hover:bg-green-50 transition-all" title="编辑">
+                                <i class="far fa-edit text-xs"></i>
+                            </button>
+                            <button onclick="event.stopPropagation(); navigateToDetail(${kb.id})" class="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-all" title="查看">
+                                <i class="far fa-eye text-xs"></i>
+                            </button>
+                            <button onclick="event.stopPropagation(); deleteItem(${kb.id})" class="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 transition-all" title="删除">
+                                <i class="far fa-trash-alt text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                gridContainer.appendChild(card);
+            });
+
+            applyGridTransition();
+        }
+
+        function renderPagination() {
+            const container = document.getElementById('pagination-container');
+            const totalPages = calculateTotalPages();
+            
+            // Build pagination HTML
+            let html = `
+                <div class="text-sm text-gray-600 font-medium">
+                    共 ${filteredData.length} 条
+                </div>
+                <div class="flex items-center space-x-3">
+                    <div class="relative group">
+                        <select onchange="handlePageSizeChange(this.value)" class="appearance-none bg-white border border-gray-300 text-gray-700 py-1.5 pl-3 pr-8 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-shadow cursor-pointer">
+                            <option value="12" ${pageSize == 12 ? 'selected' : ''}>12条/页</option>
+                            <option value="24" ${pageSize == 24 ? 'selected' : ''}>24条/页</option>
+                            <option value="48" ${pageSize == 48 ? 'selected' : ''}>48条/页</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400 group-hover:text-blue-500 transition-colors">
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-1">
+                        <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="w-8 h-8 flex items-center justify-center rounded border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-chevron-left text-xs"></i>
+                        </button>
+            `;
+
+            // Smart Pagination Logic (1, 2, ..., Last)
+            const pagesToShow = new Set([1, totalPages, currentPage, currentPage - 1, currentPage + 1]);
+            const sortedPages = Array.from(pagesToShow).filter(p => p >= 1 && p <= totalPages).sort((a, b) => a - b);
+            
+            let lastPage = 0;
+            for (const p of sortedPages) {
+                if (lastPage > 0 && p - lastPage > 1) {
+                    html += `<span class="w-8 h-8 flex items-center justify-center text-gray-400">...</span>`;
+                }
+                
+                if (p === currentPage) {
+                    html += `<button class="w-8 h-8 flex items-center justify-center rounded border border-blue-500 bg-blue-500 text-white font-medium shadow-sm">${p}</button>`;
+                } else {
+                    html += `<button onclick="changePage(${p})" class="w-8 h-8 flex items-center justify-center rounded border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-colors">${p}</button>`;
+                }
+                lastPage = p;
+            }
+
+            html += `
+                        <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="w-8 h-8 flex items-center justify-center rounded border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-chevron-right text-xs"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="flex items-center text-sm text-gray-600 ml-2">
+                        <span class="mr-2">跳至</span>
+                        <input type="number" min="1" max="${totalPages}" onkeydown="if(event.key==='Enter') changePage(this.value)" class="w-10 h-8 border border-gray-300 rounded text-center focus:outline-none focus:ring-1 focus:ring-blue-500 mx-1 transition-shadow">
+                        <span class="ml-1">页</span>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        function changePage(page) {
+            const totalPages = calculateTotalPages();
+            if (page < 1 || page > totalPages) return;
+            currentPage = parseInt(page);
+            renderGrid();
+            renderPagination();
+            persistState('push');
+        }
+
+        function handlePageSizeChange(size) {
+            pageSize = parseInt(size);
+            currentPage = 1;
+            renderGrid();
+            renderPagination();
+            persistState('push');
+        }
+
+        // --- Search ---
+        function handleSearch() {
+            const query = document.getElementById('search-input').value.trim().toLowerCase();
+            filteredData = kbList.filter(item => item.title.toLowerCase().includes(query));
+            currentPage = 1;
+            renderGrid();
+            renderPagination();
+            persistState('push');
+        }
+
+        function handleReset() {
+            document.getElementById('search-input').value = '';
+            filteredData = [...kbList];
+            currentPage = 1;
+            renderGrid();
+            renderPagination();
+            persistState('push');
+        }
+
+        function navigateToDetail(id) {
+            const item = kbList.find(i => i.id === id);
+            if (!item) return;
+            persistState('replace');
+            window.location.href = `knowledge-detail.html?id=${id}&name=${encodeURIComponent(item.title)}`;
+        }
+
+        function buildStateFromUI() {
+            const container = document.querySelector('.content-container');
+            return {
+                page: currentPage,
+                scrollTop: container ? Math.round(container.scrollTop) : 0,
+                search: document.getElementById('search-input').value.trim(),
+                pageSize: pageSize,
+                timestamp: Date.now()
+            };
+        }
+
+        function persistState(mode = 'replace') {
+            if (isRestoring) return;
+            const state = buildStateFromUI();
+            writeUrlState(state, mode);
+            sessionStorage.setItem(LIST_STATE_KEY, JSON.stringify(state));
+        }
+
+        function writeUrlState(state, mode = 'replace') {
+            const url = new URL(window.location.href);
+            if (state.page) {
+                url.searchParams.set('page', state.page);
+            } else {
+                url.searchParams.delete('page');
+            }
+            if (state.scrollTop !== undefined) {
+                url.searchParams.set('scroll', state.scrollTop);
+            } else {
+                url.searchParams.delete('scroll');
+            }
+            if (state.search) {
+                url.searchParams.set('search', state.search);
+            } else {
+                url.searchParams.delete('search');
+            }
+            if (state.pageSize) {
+                url.searchParams.set('pageSize', state.pageSize);
+            } else {
+                url.searchParams.delete('pageSize');
+            }
+            if (mode === 'push') {
+                history.pushState(state, '', url.toString());
+            } else {
+                history.replaceState(state, '', url.toString());
+            }
+        }
+
+        function readStateFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            if (![...params.keys()].length) return null;
+            if (!params.has('page') && !params.has('scroll') && !params.has('search') && !params.has('pageSize')) return null;
+            return {
+                page: parseInt(params.get('page')) || 1,
+                scrollTop: parseInt(params.get('scroll')) || 0,
+                search: params.get('search') || '',
+                pageSize: parseInt(params.get('pageSize')) || pageSize
+            };
+        }
+
+        function readStateFromStorage() {
+            const raw = sessionStorage.getItem(LIST_STATE_KEY);
+            if (!raw) return null;
+            try {
+                return JSON.parse(raw);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function restoreFromUrlOrStorage(behavior = 'auto') {
+            const urlState = readStateFromUrl();
+            if (!urlState) return false;
+            applyState(urlState, behavior);
+            return true;
+        }
+
+        function applyState(state, behavior) {
+            isRestoring = true;
+            const searchValue = (state.search || '').toString();
+            document.getElementById('search-input').value = searchValue;
+            const query = searchValue.trim().toLowerCase();
+            filteredData = query ? kbList.filter(item => item.title.toLowerCase().includes(query)) : [...kbList];
+            const size = parseInt(state.pageSize);
+            if (!isNaN(size) && size > 0) {
+                pageSize = size;
+            }
+            const totalPages = calculateTotalPages();
+            const targetPage = parseInt(state.page) || 1;
+            if (totalPages > 0) {
+                currentPage = Math.min(Math.max(1, targetPage), totalPages);
+            } else {
+                currentPage = 1;
+            }
+            renderGrid();
+            renderPagination();
+            const container = document.querySelector('.content-container');
+            const scrollTop = parseInt(state.scrollTop) || 0;
+            if (container) {
+                requestAnimationFrame(() => {
+                    container.scrollTo({
+                        top: scrollTop,
+                        behavior: behavior === 'auto' ? 'smooth' : behavior
+                    });
+                    isRestoring = false;
+                });
+            } else {
+                isRestoring = false;
+            }
+        }
+
+        function applyGridTransition() {
+            const gridContainer = document.getElementById('knowledge-grid');
+            gridContainer.classList.remove('grid-fade-in');
+            void gridContainer.offsetWidth;
+            gridContainer.classList.add('grid-fade-in');
+        }
+
+        function handleScrollPersist() {
+            if (isRestoring) return;
+            if (scrollRafId) return;
+            scrollRafId = requestAnimationFrame(() => {
+                scrollRafId = null;
+                persistState('replace');
+            });
+        }
+
+        // --- Modal & Actions ---
+        function openAddModal() {
+            document.getElementById('edit-id').value = '';
+            document.getElementById('modal-title').innerText = '新增AI知识库';
+            const titleInput = document.getElementById('edit-title');
+            titleInput.value = '';
+            document.getElementById('edit-desc').value = '';
+            
+            // Clear error styles
+            titleInput.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-200');
+            titleInput.classList.add('border-gray-200', 'focus:border-blue-500', 'focus:ring-blue-100');
+            
+            // Reset Cover
+            tempCoverUrl = null;
+            resetUploadUI();
+
+            const modal = document.getElementById('edit-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                document.getElementById('edit-modal-content').classList.remove('scale-95');
+                document.getElementById('edit-modal-content').classList.add('scale-100');
+            }, 10);
+        }
+
+        function openEditModal(id) {
+            const item = kbList.find(d => d.id === id);
+            if (!item) return;
+
+            document.getElementById('edit-id').value = id;
+            document.getElementById('modal-title').innerText = '编辑AI知识库';
+            const titleInput = document.getElementById('edit-title');
+            titleInput.value = item.title;
+            document.getElementById('edit-desc').value = item.desc;
+            
+            // Clear error styles
+            titleInput.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-200');
+            titleInput.classList.add('border-gray-200', 'focus:border-blue-500', 'focus:ring-blue-100');
+
+            // Set existing cover
+            tempCoverUrl = item.cover;
+            if (item.cover) {
+                showPreview(item.cover);
+            } else {
+                resetUploadUI();
+            }
+
+            const modal = document.getElementById('edit-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                document.getElementById('edit-modal-content').classList.remove('scale-95');
+                document.getElementById('edit-modal-content').classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('edit-modal');
+            modal.classList.add('opacity-0');
+            document.getElementById('edit-modal-content').classList.remove('scale-100');
+            document.getElementById('edit-modal-content').classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+        
+        // --- Image Upload & Crop Logic ---
+        
+        // Init Drag & Drop
+        const uploadArea = document.getElementById('cover-upload-area');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            document.getElementById('upload-placeholder').classList.add('border-blue-500', 'bg-blue-50');
+        }
+
+        function unhighlight(e) {
+            document.getElementById('upload-placeholder').classList.remove('border-blue-500', 'bg-blue-50');
+        }
+
+        uploadArea.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files && files[0]) {
+                const file = files[0];
+                if (file.type.startsWith('image/')) {
+                    handleFile(file);
+                } else {
+                    showToast('请上传图片文件', 'error');
+                }
+            }
+        }
+
+        function handleFileSelect(input) {
+            if (input.files && input.files[0]) {
+                handleFile(input.files[0]);
+                input.value = ''; // Clear input
+            }
+        }
+
+        function handleFile(file) {
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                showToast('请上传图片文件', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                openCropModal(e.target.result);
+            }
+            reader.readAsDataURL(file);
+        }
+
+        function openCropModal(imageSrc) {
+            const modal = document.getElementById('crop-modal');
+            const image = document.getElementById('crop-image');
+            
+            image.src = imageSrc;
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                document.getElementById('crop-modal-content').classList.remove('scale-95');
+                document.getElementById('crop-modal-content').classList.add('scale-100');
+                
+                // Init Cropper
+                if (cropper) {
+                    cropper.destroy();
+                }
+                cropper = new Cropper(image, {
+                    aspectRatio: 280 / 144, // Match card cover aspect ratio (w-full h-36 -> approx 2:1 or specific pixel ratio)
+                    viewMode: 1,
+                    dragMode: 'move',
+                    autoCropArea: 1,
+                    restore: false,
+                    guides: true,
+                    center: true,
+                    highlight: false,
+                    cropBoxMovable: true,
+                    cropBoxResizable: true,
+                    toggleDragModeOnDblclick: false,
+                });
+            }, 10);
+        }
+
+        function closeCropModal() {
+            const modal = document.getElementById('crop-modal');
+            modal.classList.add('opacity-0');
+            document.getElementById('crop-modal-content').classList.remove('scale-100');
+            document.getElementById('crop-modal-content').classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                if (cropper) {
+                    cropper.destroy();
+                    cropper = null;
+                }
+            }, 200);
+        }
+
+        function confirmCrop() {
+            if (!cropper) return;
+            
+            // Get cropped canvas
+            const canvas = cropper.getCroppedCanvas({
+                width: 600, // Reasonable width for cover
+                height: 600 / (280/144),
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high',
+            });
+            
+            // Convert to Data URL
+            tempCoverUrl = canvas.toDataURL('image/jpeg', 0.9);
+            
+            // Show preview in Edit Modal
+            showPreview(tempCoverUrl);
+            
+            closeCropModal();
+        }
+
+        function showPreview(url) {
+            const placeholder = document.getElementById('upload-placeholder');
+            const previewContainer = document.getElementById('upload-preview-container');
+            const previewImg = document.getElementById('upload-preview-img');
+            
+            placeholder.classList.add('hidden');
+            previewContainer.classList.remove('hidden');
+            previewImg.src = url;
+        }
+
+        function resetUploadUI() {
+            const placeholder = document.getElementById('upload-placeholder');
+            const previewContainer = document.getElementById('upload-preview-container');
+            const previewImg = document.getElementById('upload-preview-img');
+            
+            placeholder.classList.remove('hidden');
+            previewContainer.classList.add('hidden');
+            previewImg.src = '';
+        }
+
+        function saveData() {
+            const id = document.getElementById('edit-id').value;
+            const titleInput = document.getElementById('edit-title');
+            const title = titleInput.value.trim();
+            const desc = document.getElementById('edit-desc').value.trim();
+
+            if (!title) {
+                showToast('请输入知识库名称', 'error');
+                titleInput.classList.remove('border-gray-200', 'focus:border-blue-500', 'focus:ring-blue-100');
+                titleInput.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-200');
+                return;
+            }
+
+            let isNew = false;
+
+            if (id) {
+                // Edit
+                const item = kbList.find(d => d.id == id);
+                if (item) {
+                    item.title = title;
+                    item.desc = desc;
+                    item.time = new Date().toISOString().slice(0, 19).replace('T', ' ');
+                    item.updatedAt = Date.now();
+                    item.version = (item.version || 0) + 1;
+                    if (tempCoverUrl) {
+                        item.cover = tempCoverUrl;
+                    }
+                }
+            } else {
+                // Add
+                isNew = true;
+                const newItem = {
+                    id: kbList.length ? Math.max(...kbList.map(d => d.id)) + 1 : 1,
+                    title: title,
+                    desc: desc || `${title}知识库`,
+                    docCount: 0,
+                    time: new Date().toISOString().slice(0, 19).replace('T', ' '),
+                    cover: tempCoverUrl || coverImages[Math.floor(Math.random() * coverImages.length)],
+                    updatedAt: Date.now(),
+                    version: 1
+                };
+                kbList.unshift(newItem);
+                
+                // Store for guide modal
+                newKbId = newItem.id;
+                newKbTitle = newItem.title;
+            }
+
+            // Re-sort list by time to maintain order (Newest first)
+            kbList.sort((a, b) => getTimeValue(b) - getTimeValue(a));
+
+            // Sync to local storage
+            localStorage.setItem('iClass_kb_list_v4', JSON.stringify(kbList));
+            
+            // Re-filter if searching
+            const query = document.getElementById('search-input').value.trim().toLowerCase();
+            if (query) {
+                filteredData = kbList.filter(item => item.title.toLowerCase().includes(query));
+            } else {
+                filteredData = [...kbList];
+            }
+
+            // Close Edit Modal
+            closeModal();
+            
+            // Render Background updates
+            renderGrid();
+            renderPagination();
+            
+            if (isNew) {
+                // Smooth transition to Guide Modal
+                // 1. closeModal() already started the fade out of Edit Modal
+                // 2. We immediately show the Guide Modal to overlap/transition smoothly
+                const guideModal = document.getElementById('guide-modal');
+                const guideContent = document.getElementById('guide-modal-content');
+                
+                // Reset animation classes for re-triggering
+                const iconCircle = guideModal.querySelector('.icon-circle-animate');
+                const checkmark = guideModal.querySelector('.checkmark-path');
+                
+                // Force reflow to restart animations
+                iconCircle.style.animation = 'none';
+                checkmark.style.animation = 'none';
+                guideContent.offsetHeight; /* trigger reflow */
+                iconCircle.style.animation = '';
+                checkmark.style.animation = '';
+
+                guideModal.classList.remove('hidden');
+                
+                // Use a slight delay to allow the Edit modal to start fading out, creating a cross-fade effect
+                requestAnimationFrame(() => {
+                    guideModal.classList.remove('opacity-0');
+                    guideContent.classList.remove('scale-95');
+                    guideContent.classList.add('scale-100');
+                });
+            } else {
+                showToast('保存成功');
+            }
+        }
+
+        function closeGuideModal() {
+            const guideModal = document.getElementById('guide-modal');
+            const guideContent = document.getElementById('guide-modal-content');
+            
+            guideModal.classList.add('opacity-0');
+            guideContent.classList.remove('scale-100');
+            guideContent.classList.add('scale-95');
+            
+            setTimeout(() => {
+                guideModal.classList.add('hidden');
+            }, 300); // Match duration-300
+        }
+
+        function navigateToNewKnowledgeBase() {
+            if (newKbId) {
+                const guideModal = document.getElementById('guide-modal');
+                // Animate out
+                guideModal.classList.add('opacity-0');
+                document.getElementById('guide-modal-content').classList.remove('scale-100');
+                document.getElementById('guide-modal-content').classList.add('scale-95');
+                
+                setTimeout(() => {
+                    guideModal.classList.add('hidden');
+                    window.location.href = `knowledge-detail.html?id=${newKbId}&name=${encodeURIComponent(newKbTitle)}`;
+                }, 200);
+            }
+        }
+
+        function deleteItem(id) {
+            currentDeleteId = id;
+            const modal = document.getElementById('delete-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                document.getElementById('delete-modal-content').classList.remove('scale-95');
+                document.getElementById('delete-modal-content').classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeDeleteModal() {
+            const modal = document.getElementById('delete-modal');
+            modal.classList.add('opacity-0');
+            document.getElementById('delete-modal-content').classList.remove('scale-100');
+            document.getElementById('delete-modal-content').classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                currentDeleteId = null;
+            }, 200);
+        }
+
+        function confirmDelete() {
+            if (!currentDeleteId) return;
+            
+            kbList = kbList.filter(d => d.id !== currentDeleteId);
+            localStorage.setItem('iClass_kb_list_v4', JSON.stringify(kbList));
+            
+            const query = document.getElementById('search-input').value.trim().toLowerCase();
+            if (query) {
+                filteredData = kbList.filter(item => item.title.toLowerCase().includes(query));
+            } else {
+                filteredData = [...kbList];
+            }
+            
+            renderGrid();
+            renderPagination();
+            showToast('删除成功');
+            closeDeleteModal();
+        }
+
+        function showToast(msg, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            const toastIconBox = toast.firstElementChild;
+            const toastIcon = toastIconBox.firstElementChild;
+            const toastTitle = toast.querySelector('h4');
+            
+            toastMsg.innerText = msg;
+            
+            // Reset classes
+            toast.classList.remove('border-green-100', 'border-red-100');
+            toastIconBox.classList.remove('bg-green-100', 'text-green-500', 'bg-red-100', 'text-red-500');
+            toastIcon.classList.remove('fa-check', 'fa-exclamation');
+            
+            if (type === 'success') {
+                toast.classList.add('border-green-100');
+                toastIconBox.classList.add('bg-green-100', 'text-green-500');
+                toastIcon.classList.add('fa-check');
+                toastTitle.innerText = '操作成功';
+            } else {
+                toast.classList.add('border-red-100');
+                toastIconBox.classList.add('bg-red-100', 'text-red-500');
+                toastIcon.classList.add('fa-times');
+                toastTitle.innerText = '操作失败';
+            }
+            
+            toast.classList.remove('translate-x-[120%]');
+            
+            if (toast.timeoutId) clearTimeout(toast.timeoutId);
+            
+            toast.timeoutId = setTimeout(() => {
+                toast.classList.add('translate-x-[120%]');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

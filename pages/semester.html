@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学期管理</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+
+        /* Glassmorphism & Animation Utilities */
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Toast Animation */
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        .toast-enter {
+            animation: slideInRight 0.3s ease-out forwards;
+        }
+        .toast-exit {
+            animation: fadeOut 0.3s ease-out forwards;
+        }
+
+        /* Modal Transitions */
+        .modal-enter {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        .modal-enter-active {
+            opacity: 1;
+            transform: scale(100%);
+            transition: all 0.2s ease-out;
+        }
+        .modal-exit {
+            opacity: 1;
+            transform: scale(100%);
+        }
+        .modal-exit-active {
+            opacity: 0;
+            transform: scale(0.95);
+            transition: all 0.2s ease-in;
+        }
+
+        :root {
+            --dp-border: #e5e7eb;
+            --dp-muted: #cbd5e1;
+            --dp-text: #1f2937;
+            --dp-primary: #2563eb;
+            --dp-primary-soft: #eff6ff;
+            --dp-shadow: 0 18px 40px -28px rgba(15, 23, 42, 0.45), 0 10px 24px -16px rgba(15, 23, 42, 0.22);
+        }
+
+        .date-picker-panel {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            right: 0;
+            margin-bottom: 10px;
+            background: #ffffff;
+            border: 1px solid var(--dp-border);
+            border-radius: 14px;
+            padding: 12px;
+            box-shadow: var(--dp-shadow);
+            opacity: 0;
+            transform: translateY(-8px) scale(0.98);
+            pointer-events: none;
+            transition: opacity 220ms ease, transform 240ms cubic-bezier(0.22, 0.8, 0.3, 1);
+            z-index: 70;
+        }
+
+        .date-picker-panel.open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+            z-index: 90;
+        }
+
+        .date-field {
+            position: relative;
+            z-index: 10;
+        }
+
+        #edit-modal-content {
+            overflow: visible;
+        }
+
+        .date-picker-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .date-picker-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--dp-text);
+        }
+
+        .date-picker-nav {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            border: 1px solid var(--dp-border);
+            background: #ffffff;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 180ms ease;
+        }
+
+        .date-picker-nav:hover {
+            border-color: #cbd5e1;
+            background: #f8fafc;
+            color: #1f2937;
+        }
+
+        .date-picker-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            font-size: 0.75rem;
+            color: #94a3b8;
+            text-align: center;
+            margin: 6px 0 4px;
+            letter-spacing: 0.02em;
+        }
+
+        .date-picker-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 4px;
+        }
+
+        .date-picker-cell {
+            height: 34px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            color: #334155;
+            border: 1px solid transparent;
+            transition: all 160ms ease;
+        }
+
+        .date-picker-cell:hover {
+            background: var(--dp-primary-soft);
+            color: var(--dp-primary);
+        }
+
+        .date-picker-cell.muted {
+            color: var(--dp-muted);
+        }
+
+        .date-picker-cell.today {
+            border-color: #bfdbfe;
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        .date-picker-cell.selected {
+            background: var(--dp-primary);
+            color: #ffffff;
+            box-shadow: 0 6px 16px -10px rgba(37, 99, 235, 0.8);
+        }
+
+        .date-picker-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .date-picker-action {
+            font-size: 0.8rem;
+            color: #2563eb;
+            padding: 6px 10px;
+            border-radius: 8px;
+            transition: all 160ms ease;
+        }
+
+        .date-picker-action:hover {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        .year-picker-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 6px;
+        }
+
+        .year-picker-cell {
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            color: #334155;
+            border: 1px solid transparent;
+            transition: all 160ms ease;
+        }
+
+        .year-picker-cell:hover {
+            background: var(--dp-primary-soft);
+            color: var(--dp-primary);
+        }
+
+        .year-picker-cell.selected {
+            background: var(--dp-primary);
+            color: #ffffff;
+            box-shadow: 0 6px 16px -10px rgba(37, 99, 235, 0.8);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans p-4 h-full flex flex-col overflow-hidden min-h-0">
+
+    <!-- Main Content Wrapper -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex-1 min-h-0 flex flex-col relative overflow-hidden">
+        
+        <!-- Header: Filters & Add Button -->
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 gap-4 z-10 relative shrink-0">
+            <!-- Left: Date Range Filter + Buttons -->
+            <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                <!-- Date Range Input -->
+                <div class="relative w-full sm:w-64">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-calendar-alt text-gray-400"></i>
+                    </div>
+                    <input type="text" id="date-range" placeholder="请选择起止日期" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-600 transition-shadow">
+                </div>
+                
+                <!-- Buttons -->
+                <div class="flex gap-2">
+                    <button onclick="handleSearch()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow active:scale-95">
+                        查询
+                    </button>
+                    <button onclick="handleReset()" class="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-5 py-2 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow active:scale-95">
+                        重置
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right: Add Button -->
+            <button onclick="openModal('add')" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-5 rounded-lg text-sm transition-all duration-200 shadow-sm hover:shadow flex items-center justify-center w-full sm:w-auto">
+                <i class="fas fa-plus mr-1"></i> 新增学期
+            </button>
+        </div>
+
+        <!-- Divider -->
+        <div class="w-full border-t border-gray-100 mb-4"></div>
+
+        <!-- Grid Content -->
+        <div id="semester-grid" class="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-4 overflow-y-auto pr-1 pb-1 pt-2 pl-1 content-start items-start auto-rows-max">
+            <!-- Cards will be rendered here -->
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-auto pt-3 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-4 z-10 relative shrink-0" id="pagination-container">
+            <!-- Pagination rendered via JS -->
+        </div>
+
+    </div>
+
+    <!-- Edit/Add Modal -->
+    <div id="edit-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-[100] backdrop-blur-sm transition-opacity opacity-0">
+        <div class="bg-white rounded-xl shadow-2xl w-[560px] transform scale-95 transition-transform duration-200" id="edit-modal-content" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center p-5 border-b border-gray-100">
+                <h3 class="text-lg font-bold text-gray-800" id="modal-title">新增学期</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 space-y-5">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">
+                        <span class="text-red-500 mr-1">*</span>学年
+                    </label>
+                    <div class="flex items-center gap-3">
+                        <div class="relative flex-1 year-field">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <input type="number" id="year-start" class="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm" placeholder="2025" min="2000" max="2100" autocomplete="off">
+                            <div id="year-start-picker" class="date-picker-panel">
+                                <div class="date-picker-header">
+                                    <button type="button" class="date-picker-nav" data-action="prev"><i class="fas fa-chevron-left text-xs"></i></button>
+                                    <span class="date-picker-title" data-role="title"></span>
+                                    <button type="button" class="date-picker-nav" data-action="next"><i class="fas fa-chevron-right text-xs"></i></button>
+                                </div>
+                                <div class="year-picker-grid" data-role="grid"></div>
+                            </div>
+                        </div>
+                        <span class="text-gray-400 font-medium">-</span>
+                        <div class="relative flex-1 year-field">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <input type="number" id="year-end" class="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm" placeholder="2026" min="2000" max="2100" autocomplete="off">
+                            <div id="year-end-picker" class="date-picker-panel">
+                                <div class="date-picker-header">
+                                    <button type="button" class="date-picker-nav" data-action="prev"><i class="fas fa-chevron-left text-xs"></i></button>
+                                    <span class="date-picker-title" data-role="title"></span>
+                                    <button type="button" class="date-picker-nav" data-action="next"><i class="fas fa-chevron-right text-xs"></i></button>
+                                </div>
+                                <div class="year-picker-grid" data-role="grid"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">
+                        <span class="text-red-500 mr-1">*</span>学期
+                    </label>
+                    <div class="relative" id="term-select-wrapper">
+                        <input type="hidden" id="term-select" value="">
+                        <button type="button" id="term-select-btn" class="w-full flex items-center justify-between px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm bg-white hover:border-gray-400">
+                            <span id="term-select-text" class="text-gray-400">请选择学期</span>
+                            <i id="term-select-icon" class="fas fa-chevron-down text-xs text-gray-400 transition-transform duration-200"></i>
+                        </button>
+                        <div id="term-options" class="absolute left-0 right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-lg py-2 origin-top transition-all duration-200 ease-out opacity-0 scale-95 -translate-y-1 pointer-events-none z-50">
+                            <button type="button" class="term-option flex items-center justify-between w-full px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors" data-value="秋季学期">
+                                <span>秋季学期</span>
+                                <i class="fas fa-check text-blue-500 text-xs opacity-0 transition-opacity"></i>
+                            </button>
+                            <button type="button" class="term-option flex items-center justify-between w-full px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors" data-value="春季学期">
+                                <span>春季学期</span>
+                                <i class="fas fa-check text-blue-500 text-xs opacity-0 transition-opacity"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="start-date" class="block text-sm font-bold text-gray-700 mb-2"><span class="text-red-500 mr-1">*</span>开始日期</label>
+                        <div class="relative date-field">
+                            <input type="text" id="start-date" placeholder="年/月/日" autocomplete="off" class="w-full pl-4 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
+                            <button type="button" class="date-trigger absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 transition-colors">
+                                <i class="far fa-calendar-alt"></i>
+                            </button>
+                            <div id="start-date-picker" class="date-picker-panel">
+                                <div class="date-picker-header">
+                                    <button type="button" class="date-picker-nav" data-action="prev"><i class="fas fa-chevron-left text-xs"></i></button>
+                                    <span class="date-picker-title" data-role="title"></span>
+                                    <button type="button" class="date-picker-nav" data-action="next"><i class="fas fa-chevron-right text-xs"></i></button>
+                                </div>
+                                <div class="date-picker-weekdays">
+                                    <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+                                </div>
+                                <div class="date-picker-grid" data-role="grid"></div>
+                                <div class="date-picker-footer">
+                                    <button type="button" class="date-picker-action" data-action="clear">清除</button>
+                                    <button type="button" class="date-picker-action" data-action="today">今天</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="end-date" class="block text-sm font-bold text-gray-700 mb-2"><span class="text-red-500 mr-1">*</span>结束日期</label>
+                        <div class="relative date-field">
+                            <input type="text" id="end-date" placeholder="年/月/日" autocomplete="off" class="w-full pl-4 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
+                            <button type="button" class="date-trigger absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 transition-colors">
+                                <i class="far fa-calendar-alt"></i>
+                            </button>
+                            <div id="end-date-picker" class="date-picker-panel">
+                                <div class="date-picker-header">
+                                    <button type="button" class="date-picker-nav" data-action="prev"><i class="fas fa-chevron-left text-xs"></i></button>
+                                    <span class="date-picker-title" data-role="title"></span>
+                                    <button type="button" class="date-picker-nav" data-action="next"><i class="fas fa-chevron-right text-xs"></i></button>
+                                </div>
+                                <div class="date-picker-weekdays">
+                                    <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+                                </div>
+                                <div class="date-picker-grid" data-role="grid"></div>
+                                <div class="date-picker-footer">
+                                    <button type="button" class="date-picker-action" data-action="clear">清除</button>
+                                    <button type="button" class="date-picker-action" data-action="today">今天</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <label class="flex items-center gap-2 text-sm text-gray-700 font-medium cursor-pointer">
+                    <input type="checkbox" id="is-current" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4">
+                    设为当前学期
+                </label>
+            </div>
+
+            <div class="p-5 border-t border-gray-100 flex justify-end gap-3">
+                <button onclick="closeModal()" class="px-5 py-2 text-sm text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors font-medium">取消</button>
+                <button onclick="saveSemester()" class="px-5 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors font-medium shadow-sm hover:shadow">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Modal -->
+    <div id="delete-modal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="absolute inset-0 bg-gray-500 bg-opacity-75 transition-opacity backdrop-blur-sm" onclick="closeDeleteModal()"></div>
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div id="delete-modal-panel" class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md scale-95 opacity-0 duration-300">
+                    <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <i class="fas fa-exclamation-triangle text-red-600"></i>
+                            </div>
+                            <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                                <h3 class="text-base font-semibold leading-6 text-gray-900" id="modal-title">删除学期</h3>
+                                <div class="mt-2">
+                                    <p class="text-sm text-gray-500">确定要删除该学期吗？此操作无法撤销，且可能影响关联的课程和教学数据。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                        <button type="button" class="inline-flex w-full justify-center rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto transition-colors" onclick="confirmDelete()">删除</button>
+                        <button type="button" class="mt-3 inline-flex w-full justify-center rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto transition-colors" onclick="closeDeleteModal()">取消</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast-notification" class="fixed top-4 right-4 bg-white border border-green-100 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-lg p-4 flex items-center gap-3 transform translate-x-[120%] transition-transform duration-300 z-[100]">
+        <div id="toast-icon-container" class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-500 shrink-0">
+            <i id="toast-icon" class="fas fa-check"></i>
+        </div>
+        <div>
+            <h4 id="toast-title" class="font-bold text-gray-800 text-sm">操作成功</h4>
+            <p id="toast-message" class="text-xs text-gray-500 mt-0.5">操作成功</p>
+        </div>
+    </div>
+
+    <script>
+        // --- Mock Data ---
+        const generateMockData = () => {
+            const data = [];
+            let id = 1;
+            
+            for (let i = 0; i < 6; i++) {
+                const startYear = 2025 - i;
+                const endYear = startYear + 1;
+                const yearLabel = `${startYear}-${endYear}学年`;
+
+                data.push({
+                    id: id++,
+                    name: `${yearLabel} 秋季学期`,
+                    startDate: `${startYear}-09-01`,
+                    endDate: `${endYear}-01-15`,
+                    weeks: 20,
+                    isCurrent: i === 0
+                });
+
+                data.push({
+                    id: id++,
+                    name: `${yearLabel} 春季学期`,
+                    startDate: `${endYear}-02-17`,
+                    endDate: `${endYear}-07-04`,
+                    weeks: 19,
+                    isCurrent: false
+                });
+            }
+
+            return data;
+        };
+
+        // --- State Management ---
+        let semesters = generateMockData();
+        let filteredSemesters = [...semesters];
+        let currentPage = 1;
+        let pageSize = 9;
+        let editingId = null;
+        let deleteId = null;
+        let termDropdown = null;
+
+        // --- UI Rendering ---
+        
+        function renderGrid() {
+            const grid = document.getElementById('semester-grid');
+            grid.innerHTML = '';
+            
+            // Calculate pagination
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            const pageData = filteredSemesters.slice(start, end);
+
+            if (pageData.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full flex flex-col items-center justify-center py-12 text-gray-500">
+                        <i class="fas fa-inbox text-4xl mb-3 text-gray-300"></i>
+                        <p>暂无相关学期数据</p>
+                    </div>
+                `;
+                return;
+            }
+
+            pageData.forEach(semester => {
+                const card = document.createElement('div');
+                // Highlight current semester with blue background and border
+                const baseClasses = 'border rounded-xl p-3 relative overflow-hidden card-hover shadow-sm group';
+                const colorClasses = semester.isCurrent 
+                    ? 'bg-blue-50 border-blue-200' 
+                    : 'bg-white border-gray-100';
+                
+                const footerBorderClass = semester.isCurrent ? 'border-blue-100' : 'border-gray-50';
+
+                card.className = `${baseClasses} ${colorClasses}`;
+                
+                // Current Badge
+                const badge = semester.isCurrent 
+                    ? `<div class="absolute top-0 right-0 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-bl-xl shadow-sm z-10">当前学期</div>` 
+                    : '';
+                
+                // Card Content
+                card.innerHTML = `
+                    ${badge}
+                    <div class="mb-4 pr-16">
+                        <h3 class="text-lg font-bold text-gray-800 leading-tight mb-1 group-hover:text-blue-600 transition-colors">${semester.name}</h3>
+                    </div>
+                    
+                    <div class="space-y-2 mb-6">
+                        <div class="flex items-start text-sm text-gray-600">
+                            <span class="w-16 shrink-0 text-gray-400">起止日期</span>
+                            <span class="font-medium">${semester.startDate} ~ ${semester.endDate}</span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-600">
+                            <span class="w-16 shrink-0 text-gray-400">周数</span>
+                            <span class="font-medium">${semester.weeks}周</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-4 border-t ${footerBorderClass}">
+                        <div class="flex gap-3">
+                            <button onclick="viewDetails(${semester.id})" class="text-blue-600 text-sm font-medium hover:text-blue-800 hover:underline transition-colors flex items-center">
+                                查看详情
+                            </button>
+                            <button onclick="openModal('edit', ${semester.id})" class="text-blue-600 text-sm font-medium hover:text-blue-800 hover:underline transition-colors flex items-center">
+                                编辑
+                            </button>
+                        </div>
+                        <button onclick="openDeleteModal(${semester.id})" class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 bg-transparent border border-transparent hover:text-red-500 hover:bg-red-50 hover:border-red-200 transition-colors" title="删除">
+                            <i class="far fa-trash-alt"></i>
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function renderPagination() {
+            const container = document.getElementById('pagination-container');
+            const totalItems = filteredSemesters.length;
+            const totalPages = Math.ceil(totalItems / pageSize);
+            
+            let html = `
+                <div class="text-sm text-gray-600 font-medium">
+                    共 ${totalItems} 条
+                </div>
+                <div class="flex items-center space-x-3">
+                    <div class="relative group">
+                        <select onchange="handlePageSizeChange(this.value)" class="appearance-none bg-white border border-gray-300 text-gray-700 py-1.5 pl-3 pr-8 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-shadow">
+                            <option value="6" ${pageSize == 6 ? 'selected' : ''}>6条/页</option>
+                            <option value="9" ${pageSize == 9 ? 'selected' : ''}>9条/页</option>
+                            <option value="12" ${pageSize == 12 ? 'selected' : ''}>12条/页</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400 group-hover:text-blue-500 transition-colors">
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-1">
+                        <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="w-8 h-8 flex items-center justify-center rounded border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-chevron-left text-xs"></i>
+                        </button>
+            `;
+
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    const isActive = i === currentPage;
+                    html += `
+                        <button onclick="changePage(${i})" class="w-8 h-8 flex items-center justify-center rounded border ${isActive ? 'border-blue-500 bg-blue-500 text-white font-medium shadow-sm' : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-colors'}">
+                            ${i}
+                        </button>
+                    `;
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    html += `<span class="w-8 h-8 flex items-center justify-center text-gray-400">...</span>`;
+                }
+            }
+
+            html += `
+                        <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="w-8 h-8 flex items-center justify-center rounded border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-chevron-right text-xs"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="flex items-center text-sm text-gray-600 ml-2">
+                        <span class="mr-2">跳至</span>
+                        <input type="number" min="1" max="${totalPages}" onchange="changePage(this.value)" class="w-10 h-8 border border-gray-300 rounded text-center focus:outline-none focus:ring-1 focus:ring-blue-500 mx-1 transition-shadow" value="${currentPage}">
+                        <span class="ml-1">页</span>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        // --- Interactions ---
+
+        function handleSearch() {
+            const dateRange = document.getElementById('date-range').value.toLowerCase();
+            // Simple filter logic: match any text or logic
+            // For mock demo, we'll just filter by name match if user types something similar to date or name
+            // But since input is "Date Range", realistically we'd parse dates.
+            // Here we assume simple text match for prototype unless specific logic needed.
+            // Let's implement name search if the user types something, but the input is date-range placeholder.
+            // Let's assume the user might type a year like "2024".
+            
+            filteredSemesters = semesters.filter(item => {
+                if (!dateRange) return true;
+                return item.name.includes(dateRange) || 
+                       item.startDate.includes(dateRange) || 
+                       item.endDate.includes(dateRange);
+            });
+            currentPage = 1;
+            renderGrid();
+            renderPagination();
+            showToast('查询成功', 'success');
+        }
+
+        function handleReset() {
+            document.getElementById('date-range').value = '';
+            filteredSemesters = [...semesters];
+            currentPage = 1;
+            renderGrid();
+            renderPagination();
+            showToast('已重置筛选条件', 'info');
+        }
+
+        function changePage(page) {
+            const totalPages = Math.ceil(filteredSemesters.length / pageSize);
+            page = parseInt(page);
+            if (page < 1 || page > totalPages || page === currentPage) return;
+            currentPage = page;
+            renderGrid();
+            renderPagination();
+        }
+
+        function handlePageSizeChange(size) {
+            pageSize = parseInt(size);
+            currentPage = 1;
+            renderGrid();
+            renderPagination();
+        }
+
+        function initTermDropdown() {
+            const wrapper = document.getElementById('term-select-wrapper');
+            if (!wrapper) return;
+
+            const btn = document.getElementById('term-select-btn');
+            const options = document.getElementById('term-options');
+            const text = document.getElementById('term-select-text');
+            const input = document.getElementById('term-select');
+            const icon = document.getElementById('term-select-icon');
+            const items = Array.from(options.querySelectorAll('.term-option'));
+
+            termDropdown = { wrapper, btn, options, text, input, icon, items, isOpen: false };
+
+            btn.addEventListener('click', (event) => {
+                event.stopPropagation();
+                toggleTermOptions();
+            });
+
+            items.forEach((item) => {
+                item.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    setTermValue(item.dataset.value);
+                    closeTermOptions();
+                });
+            });
+
+            document.addEventListener('click', (event) => {
+                if (!wrapper.contains(event.target)) {
+                    closeTermOptions();
+                }
+            });
+        }
+
+        function setTermValue(value) {
+            if (!termDropdown) return;
+            const hasValue = !!value;
+            termDropdown.input.value = value || '';
+            termDropdown.text.textContent = value || '请选择学期';
+            termDropdown.text.classList.toggle('text-gray-400', !hasValue);
+            termDropdown.text.classList.toggle('text-gray-700', hasValue);
+
+            termDropdown.items.forEach((item) => {
+                const selected = item.dataset.value === value;
+                item.classList.toggle('bg-blue-50', selected);
+                item.classList.toggle('text-blue-600', selected);
+                const check = item.querySelector('i');
+                if (check) {
+                    check.classList.toggle('opacity-100', selected);
+                    check.classList.toggle('opacity-0', !selected);
+                }
+            });
+        }
+
+        function openTermOptions() {
+            if (!termDropdown || termDropdown.isOpen) return;
+            termDropdown.isOpen = true;
+            termDropdown.options.classList.remove('opacity-0', 'scale-95', '-translate-y-1', 'pointer-events-none');
+            termDropdown.options.classList.add('opacity-100', 'scale-100', 'translate-y-0', 'pointer-events-auto');
+            termDropdown.icon.classList.add('rotate-180');
+        }
+
+        function closeTermOptions() {
+            if (!termDropdown || !termDropdown.isOpen) return;
+            termDropdown.isOpen = false;
+            termDropdown.options.classList.add('opacity-0', 'scale-95', '-translate-y-1', 'pointer-events-none');
+            termDropdown.options.classList.remove('opacity-100', 'scale-100', 'translate-y-0', 'pointer-events-auto');
+            termDropdown.icon.classList.remove('rotate-180');
+        }
+
+        function toggleTermOptions() {
+            if (!termDropdown) return;
+            if (termDropdown.isOpen) {
+                closeTermOptions();
+            } else {
+                openTermOptions();
+            }
+        }
+
+        let datePickers = {};
+        let activeDatePicker = null;
+        let datePickerInitialized = false;
+        let yearPickers = {};
+        let activeYearPicker = null;
+        let yearPickerInitialized = false;
+
+        function initDatePickers() {
+            if (datePickerInitialized) return;
+            setupDatePicker('start-date', 'start-date-picker');
+            setupDatePicker('end-date', 'end-date-picker');
+            datePickerInitialized = true;
+
+            document.addEventListener('click', (event) => {
+                if (activeDatePicker && !activeDatePicker.wrapper.contains(event.target)) {
+                    closeDatePicker(activeDatePicker);
+                }
+            });
+        }
+
+
+        function initYearPickers() {
+            if (yearPickerInitialized) return;
+            setupYearPicker('year-start', 'year-start-picker');
+            setupYearPicker('year-end', 'year-end-picker');
+            yearPickerInitialized = true;
+
+            document.addEventListener('click', (event) => {
+                if (activeYearPicker && !activeYearPicker.wrapper.contains(event.target)) {
+                    closeYearPicker(activeYearPicker);
+                }
+            });
+        }
+
+        function setupDatePicker(inputId, panelId) {
+            const input = document.getElementById(inputId);
+            const panel = document.getElementById(panelId);
+            if (!input || !panel) return;
+
+            const wrapper = panel.closest('.date-field');
+            const title = panel.querySelector('[data-role="title"]');
+            const grid = panel.querySelector('[data-role="grid"]');
+            const prev = panel.querySelector('[data-action="prev"]');
+            const next = panel.querySelector('[data-action="next"]');
+            const clear = panel.querySelector('[data-action="clear"]');
+            const today = panel.querySelector('[data-action="today"]');
+            const trigger = wrapper.querySelector('.date-trigger');
+
+            const picker = {
+                input,
+                panel,
+                wrapper,
+                title,
+                grid,
+                prev,
+                next,
+                clear,
+                today,
+                trigger,
+                viewDate: new Date(),
+                selectedDate: null
+            };
+
+            datePickers[inputId] = picker;
+
+            picker.render = () => renderDatePicker(picker);
+            picker.sync = () => syncDatePickerValue(picker);
+            picker.open = () => openDatePicker(picker);
+            picker.close = () => closeDatePicker(picker);
+
+            input.addEventListener('click', (event) => {
+                event.stopPropagation();
+                picker.sync();
+                if (activeDatePicker === picker && picker.panel.classList.contains('open')) {
+                    picker.close();
+                } else {
+                    picker.open();
+                }
+            });
+
+            input.addEventListener('input', () => {
+                picker.sync();
+            });
+
+            trigger.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                picker.sync();
+                if (activeDatePicker === picker && picker.panel.classList.contains('open')) {
+                    picker.close();
+                } else {
+                    picker.open();
+                }
+            });
+
+            panel.addEventListener('click', (event) => {
+                event.stopPropagation();
+                const cell = event.target.closest('button[data-date]');
+                if (cell) {
+                    const date = parseDateValue(cell.dataset.date);
+                    if (date) {
+                        picker.selectedDate = date;
+                        picker.input.value = formatDate(date);
+                        picker.viewDate = new Date(date.getFullYear(), date.getMonth(), 1);
+                        picker.render();
+                        picker.close();
+                    }
+                }
+            });
+
+            prev.addEventListener('click', (event) => {
+                event.stopPropagation();
+                picker.viewDate = new Date(picker.viewDate.getFullYear(), picker.viewDate.getMonth() - 1, 1);
+                picker.render();
+            });
+
+            next.addEventListener('click', (event) => {
+                event.stopPropagation();
+                picker.viewDate = new Date(picker.viewDate.getFullYear(), picker.viewDate.getMonth() + 1, 1);
+                picker.render();
+            });
+
+            clear.addEventListener('click', (event) => {
+                event.stopPropagation();
+                picker.selectedDate = null;
+                picker.input.value = '';
+                picker.render();
+                picker.close();
+            });
+
+            today.addEventListener('click', (event) => {
+                event.stopPropagation();
+                const now = new Date();
+                picker.selectedDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                picker.input.value = formatDate(picker.selectedDate);
+                picker.viewDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                picker.render();
+                picker.close();
+            });
+
+            wrapper.addEventListener('click', (event) => {
+                event.stopPropagation();
+            });
+
+            picker.sync();
+            picker.render();
+        }
+
+        function openDatePicker(picker) {
+            if (activeDatePicker && activeDatePicker !== picker) {
+                closeDatePicker(activeDatePicker);
+            }
+            if (activeYearPicker) {
+                closeYearPicker(activeYearPicker);
+            }
+            picker.panel.classList.add('open');
+            activeDatePicker = picker;
+        }
+
+        function closeDatePicker(picker) {
+            if (!picker) return;
+            picker.panel.classList.remove('open');
+            if (activeDatePicker === picker) {
+                activeDatePicker = null;
+            }
+        }
+
+        function closeAllDatePickers() {
+            Object.values(datePickers).forEach((picker) => closeDatePicker(picker));
+        }
+
+        function setupYearPicker(inputId, panelId) {
+            const input = document.getElementById(inputId);
+            const panel = document.getElementById(panelId);
+            if (!input || !panel) return;
+
+            const wrapper = panel.closest('.year-field');
+            const title = panel.querySelector('[data-role="title"]');
+            const grid = panel.querySelector('[data-role="grid"]');
+            const prev = panel.querySelector('[data-action="prev"]');
+            const next = panel.querySelector('[data-action="next"]');
+
+            const picker = {
+                input,
+                panel,
+                wrapper,
+                title,
+                grid,
+                prev,
+                next,
+                viewStartYear: getYearRangeStart(new Date().getFullYear()),
+                selectedYear: null
+            };
+
+            yearPickers[inputId] = picker;
+
+            picker.render = () => renderYearPicker(picker);
+            picker.sync = () => syncYearPickerValue(picker);
+            picker.open = () => openYearPicker(picker);
+            picker.close = () => closeYearPicker(picker);
+
+            input.addEventListener('click', (event) => {
+                event.stopPropagation();
+                picker.sync();
+                if (activeYearPicker === picker && picker.panel.classList.contains('open')) {
+                    picker.close();
+                } else {
+                    picker.open();
+                }
+            });
+
+            input.addEventListener('input', () => {
+                picker.sync();
+            });
+
+            panel.addEventListener('click', (event) => {
+                event.stopPropagation();
+                const cell = event.target.closest('button[data-year]');
+                if (cell) {
+                    const value = Number(cell.dataset.year);
+                    if (!Number.isNaN(value)) {
+                        picker.selectedYear = value;
+                        picker.input.value = value;
+                        picker.render();
+                        picker.close();
+                    }
+                }
+            });
+
+            prev.addEventListener('click', (event) => {
+                event.stopPropagation();
+                picker.viewStartYear -= 12;
+                picker.render();
+            });
+
+            next.addEventListener('click', (event) => {
+                event.stopPropagation();
+                picker.viewStartYear += 12;
+                picker.render();
+            });
+
+            wrapper.addEventListener('click', (event) => {
+                event.stopPropagation();
+            });
+
+            picker.sync();
+            picker.render();
+        }
+
+        function openYearPicker(picker) {
+            if (activeYearPicker && activeYearPicker !== picker) {
+                closeYearPicker(activeYearPicker);
+            }
+            if (activeDatePicker) {
+                closeDatePicker(activeDatePicker);
+            }
+            picker.panel.classList.add('open');
+            activeYearPicker = picker;
+        }
+
+        function closeYearPicker(picker) {
+            if (!picker) return;
+            picker.panel.classList.remove('open');
+            if (activeYearPicker === picker) {
+                activeYearPicker = null;
+            }
+        }
+
+        function closeAllYearPickers() {
+            Object.values(yearPickers).forEach((picker) => closeYearPicker(picker));
+        }
+
+        function syncDatePickerValue(picker) {
+            const parsed = parseDateValue(picker.input.value);
+            if (parsed) {
+                picker.selectedDate = parsed;
+                picker.viewDate = new Date(parsed.getFullYear(), parsed.getMonth(), 1);
+            }
+            picker.render();
+        }
+
+        function renderDatePicker(picker) {
+            const year = picker.viewDate.getFullYear();
+            const month = picker.viewDate.getMonth();
+            picker.title.textContent = `${year}年${month + 1}月`;
+
+            const firstDay = new Date(year, month, 1);
+            const startWeekday = (firstDay.getDay() + 6) % 7;
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const prevMonthDays = new Date(year, month, 0).getDate();
+
+            picker.grid.innerHTML = '';
+            const today = new Date();
+            const todayKey = formatDate(today);
+
+            for (let i = 0; i < 42; i++) {
+                const dayOffset = i - startWeekday + 1;
+                let cellDate;
+                let isMuted = false;
+
+                if (dayOffset <= 0) {
+                    cellDate = new Date(year, month - 1, prevMonthDays + dayOffset);
+                    isMuted = true;
+                } else if (dayOffset > daysInMonth) {
+                    cellDate = new Date(year, month + 1, dayOffset - daysInMonth);
+                    isMuted = true;
+                } else {
+                    cellDate = new Date(year, month, dayOffset);
+                }
+
+                const cell = document.createElement('button');
+                cell.type = 'button';
+                cell.dataset.date = formatDate(cellDate);
+                cell.textContent = cellDate.getDate();
+                cell.className = 'date-picker-cell' + (isMuted ? ' muted' : '');
+
+                const isSelected = picker.selectedDate && formatDate(picker.selectedDate) === cell.dataset.date;
+                if (isSelected) {
+                    cell.classList.add('selected');
+                } else if (cell.dataset.date === todayKey) {
+                    cell.classList.add('today');
+                }
+
+                picker.grid.appendChild(cell);
+            }
+        }
+
+        function parseDateValue(value) {
+            if (!value) return null;
+            const match = value.trim().match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+            if (!match) return null;
+            const year = Number(match[1]);
+            const month = Number(match[2]) - 1;
+            const day = Number(match[3]);
+            const date = new Date(year, month, day);
+            if (Number.isNaN(date.getTime())) return null;
+            if (date.getFullYear() !== year || date.getMonth() !== month || date.getDate() !== day) return null;
+            return date;
+        }
+
+        function formatDate(date) {
+            const y = date.getFullYear();
+            const m = `${date.getMonth() + 1}`.padStart(2, '0');
+            const d = `${date.getDate()}`.padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function getYearRangeStart(year) {
+            return year - (year % 12);
+        }
+
+        function syncYearPickerValue(picker) {
+            const value = Number(picker.input.value);
+            if (!Number.isNaN(value) && value >= 1900 && value <= 2200) {
+                picker.selectedYear = value;
+                picker.viewStartYear = getYearRangeStart(value);
+            }
+            picker.render();
+        }
+
+        function renderYearPicker(picker) {
+            const start = picker.viewStartYear;
+            const end = start + 11;
+            picker.title.textContent = `${start} - ${end}`;
+            picker.grid.innerHTML = '';
+
+            for (let i = 0; i < 12; i++) {
+                const year = start + i;
+                const cell = document.createElement('button');
+                cell.type = 'button';
+                cell.dataset.year = year;
+                cell.textContent = year;
+                cell.className = 'year-picker-cell';
+                if (picker.selectedYear === year) {
+                    cell.classList.add('selected');
+                }
+                picker.grid.appendChild(cell);
+            }
+        }
+
+        function setYearPickerValue(inputId, value) {
+            const picker = yearPickers[inputId];
+            if (!picker) return;
+            picker.input.value = value || '';
+            picker.sync();
+        }
+
+        function setDatePickerValue(inputId, value) {
+            const picker = datePickers[inputId];
+            if (!picker) return;
+            picker.input.value = value || '';
+            picker.sync();
+        }
+
+        // --- Modal Logic ---
+
+        function openModal(mode, id = null) {
+            const modal = document.getElementById('edit-modal');
+            const content = document.getElementById('edit-modal-content');
+            const title = document.getElementById('modal-title');
+            const yearStartInput = document.getElementById('year-start');
+            const yearEndInput = document.getElementById('year-end');
+            const isCurrentInput = document.getElementById('is-current');
+            
+            editingId = id;
+            if (!termDropdown) initTermDropdown();
+            if (!datePickerInitialized) initDatePickers();
+            if (!yearPickerInitialized) initYearPickers();
+
+            if (mode === 'edit' && id) {
+                title.textContent = '编辑学期';
+                const item = semesters.find(s => s.id === id);
+                if (item) {
+                    const match = item.name.match(/(\d{4})-(\d{4})学年\s*(秋季学期|春季学期)/);
+                    setYearPickerValue('year-start', match ? match[1] : '');
+                    setYearPickerValue('year-end', match ? match[2] : '');
+                    setTermValue(match ? match[3] : '');
+                    setDatePickerValue('start-date', item.startDate);
+                    setDatePickerValue('end-date', item.endDate);
+                    isCurrentInput.checked = item.isCurrent;
+                }
+            } else {
+                title.textContent = '新增学期';
+                const currentYear = new Date().getFullYear();
+                setYearPickerValue('year-start', currentYear);
+                setYearPickerValue('year-end', currentYear + 1);
+                setTermValue('秋季学期');
+                setDatePickerValue('start-date', '');
+                setDatePickerValue('end-date', '');
+                isCurrentInput.checked = false;
+            }
+
+            modal.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            });
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('edit-modal');
+            const content = document.getElementById('edit-modal-content');
+            
+            modal.classList.add('opacity-0');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            closeTermOptions();
+            closeAllDatePickers();
+            closeAllYearPickers();
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+            editingId = null;
+        }
+
+        function saveSemester() {
+            const yearStart = document.getElementById('year-start').value.trim();
+            const yearEnd = document.getElementById('year-end').value.trim();
+            const term = document.getElementById('term-select').value;
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+            const isCurrent = document.getElementById('is-current').checked;
+
+            if (!yearStart || !yearEnd || !term || !startDate || !endDate) {
+                showToast('请填写所有必填项', 'error');
+                return;
+            }
+
+            const name = `${yearStart}-${yearEnd}学年 ${term}`;
+
+            // Calculate weeks (approximate)
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const diffTime = Math.abs(end - start);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+            const weeks = Math.ceil(diffDays / 7);
+
+            if (editingId) {
+                // Update
+                const index = semesters.findIndex(s => s.id === editingId);
+                if (index !== -1) {
+                    semesters[index] = {
+                        ...semesters[index],
+                        name,
+                        startDate,
+                        endDate,
+                        weeks,
+                        isCurrent
+                    };
+                    
+                    // Handle single current semester logic
+                    if (isCurrent) {
+                        semesters.forEach(s => {
+                            if (s.id !== editingId) s.isCurrent = false;
+                        });
+                    }
+                    showToast('学期更新成功', 'success');
+                }
+            } else {
+                // Create
+                const newId = Math.max(...semesters.map(s => s.id), 0) + 1;
+                const newItem = {
+                    id: newId,
+                    name,
+                    startDate,
+                    endDate,
+                    weeks,
+                    isCurrent
+                };
+                
+                if (isCurrent) {
+                    semesters.forEach(s => s.isCurrent = false);
+                }
+                
+                semesters.unshift(newItem); // Add to top
+                showToast('学期创建成功', 'success');
+            }
+
+            filteredSemesters = [...semesters]; // Reset filter on save
+            currentPage = 1;
+            renderGrid();
+            renderPagination();
+            closeModal();
+        }
+
+        function openDeleteModal(id) {
+            deleteId = id;
+            const modal = document.getElementById('delete-modal');
+            const panel = document.getElementById('delete-modal-panel');
+            
+            modal.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                panel.classList.remove('scale-95', 'opacity-0');
+                panel.classList.add('scale-100', 'opacity-100');
+            });
+        }
+
+        function closeDeleteModal() {
+            const modal = document.getElementById('delete-modal');
+            const panel = document.getElementById('delete-modal-panel');
+            
+            panel.classList.remove('scale-100', 'opacity-100');
+            panel.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+            deleteId = null;
+        }
+
+        function confirmDelete() {
+            if (deleteId) {
+                semesters = semesters.filter(s => s.id !== deleteId);
+                filteredSemesters = filteredSemesters.filter(s => s.id !== deleteId);
+                
+                // Adjust page if empty
+                const totalPages = Math.ceil(filteredSemesters.length / pageSize);
+                if (currentPage > totalPages && totalPages > 0) {
+                    currentPage = totalPages;
+                }
+                
+                renderGrid();
+                renderPagination();
+                showToast('学期已删除', 'success');
+                closeDeleteModal();
+            }
+        }
+
+        function viewDetails(id) {
+            showToast('即将跳转至学期详情页...', 'info');
+            // Mock navigation
+        }
+
+        // --- Toast System ---
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast-notification');
+            const iconContainer = document.getElementById('toast-icon-container');
+            const icon = document.getElementById('toast-icon');
+            const title = document.getElementById('toast-title');
+            const msg = document.getElementById('toast-message');
+
+            // Config based on type
+            const config = {
+                success: {
+                    title: '操作成功',
+                    icon: 'fa-check',
+                    borderColor: 'border-green-100',
+                    iconBg: 'bg-green-100',
+                    iconColor: 'text-green-500'
+                },
+                error: {
+                    title: '操作失败',
+                    icon: 'fa-times',
+                    borderColor: 'border-red-100',
+                    iconBg: 'bg-red-100',
+                    iconColor: 'text-red-500'
+                },
+                info: {
+                    title: '系统提示',
+                    icon: 'fa-info',
+                    borderColor: 'border-blue-100',
+                    iconBg: 'bg-blue-100',
+                    iconColor: 'text-blue-500'
+                }
+            };
+
+            const conf = config[type] || config.success;
+
+            // Reset classes (keeping base classes)
+            toast.className = `fixed top-4 right-4 bg-white border shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-lg p-4 flex items-center gap-3 transform transition-transform duration-300 z-[100] ${conf.borderColor}`;
+            
+            // Update content
+            iconContainer.className = `w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${conf.iconBg} ${conf.iconColor}`;
+            icon.className = `fas ${conf.icon}`;
+            title.textContent = conf.title;
+            msg.textContent = message;
+
+            // Show
+            toast.classList.remove('translate-x-[120%]');
+            
+            // Hide after 3s
+            if (toast.timeoutId) clearTimeout(toast.timeoutId);
+            toast.timeoutId = setTimeout(() => {
+                toast.classList.add('translate-x-[120%]');
+            }, 3000);
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            initTermDropdown();
+            renderGrid();
+            renderPagination();
+        });
+    </script>
+</body>
+</html>

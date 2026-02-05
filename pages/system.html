@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统管理 - 用户管理</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom scrollbar */
+        .table-container::-webkit-scrollbar {
+            height: 10px;
+            width: 10px;
+        }
+        .table-container::-webkit-scrollbar-track {
+            background: #f8fafc;
+            border-radius: 4px;
+        }
+        .table-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 5px;
+            border: 2px solid #f8fafc;
+        }
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="p-4 bg-gray-50 h-screen overflow-hidden font-sans text-gray-700 flex flex-col">
+    <!-- Main Container -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex flex-col flex-1 h-full overflow-hidden">
+        
+        <!-- Filter Section -->
+        <div class="flex flex-wrap items-center gap-3 mb-4 shrink-0 bg-gray-50/50 p-3 rounded-lg border border-gray-100">
+            <div class="flex items-center gap-2">
+                <span class="text-sm font-medium text-gray-600">用户名：</span>
+                <input type="text" placeholder="请输入用户名" class="bg-white border border-gray-300 text-gray-700 py-1.5 px-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-48 text-sm transition-shadow">
+            </div>
+            <button class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1.5 px-4 rounded-md text-sm transition-all duration-200 shadow-sm hover:shadow">
+                查询
+            </button>
+            <button class="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 font-medium py-1.5 px-4 rounded-md text-sm transition-all duration-200 shadow-sm hover:shadow">
+                重置
+            </button>
+        </div>
+
+        <!-- Toolbar Section -->
+        <div class="flex flex-wrap items-center justify-between mb-3 shrink-0">
+            <div class="flex items-center gap-3">
+                <button class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 shadow-sm hover:shadow flex items-center gap-2">
+                    <i class="fas fa-plus text-xs"></i> 新建用户
+                </button>
+                <button class="bg-white hover:bg-red-50 text-gray-700 hover:text-red-600 border border-gray-300 hover:border-red-200 font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 shadow-sm hover:shadow">
+                    批量删除
+                </button>
+            </div>
+            <button class="bg-blue-400 hover:bg-blue-500 text-white font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 shadow-sm hover:shadow">
+                刷新
+            </button>
+        </div>
+
+        <!-- Table Section -->
+        <div class="table-container flex-1 border border-gray-200 rounded-lg relative bg-white overflow-auto">
+            <table class="min-w-max w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50/90 backdrop-blur-sm sticky top-0 shadow-sm z-30">
+                    <tr>
+                        <th scope="col" class="px-6 py-4 text-center w-12">
+                            <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4 cursor-pointer">
+                        </th>
+                        <th scope="col" class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">用户名</th>
+                        <th scope="col" class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">创建时间</th>
+                        <th scope="col" class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">更新时间</th>
+                        <th scope="col" class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">角色</th>
+                        <th scope="col" class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">操作</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200 text-sm" id="user-table-body">
+                    <!-- Data will be populated by JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Section -->
+        <div class="flex flex-wrap items-center justify-between pt-3 mt-auto shrink-0">
+            <div class="text-sm text-gray-600 font-medium">
+                共 8 条
+            </div>
+            <div class="flex items-center space-x-3">
+                <div class="relative group">
+                    <select class="appearance-none bg-white border border-gray-300 text-gray-700 py-1.5 pl-3 pr-8 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-shadow">
+                        <option>10条/页</option>
+                        <option>20条/页</option>
+                        <option>50条/页</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400 group-hover:text-blue-500 transition-colors">
+                        <i class="fas fa-chevron-down text-xs"></i>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-1">
+                    <button class="w-8 h-8 flex items-center justify-center rounded border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-colors">
+                        <i class="fas fa-chevron-left text-xs"></i>
+                    </button>
+                    <button class="w-8 h-8 flex items-center justify-center rounded border border-blue-500 bg-blue-500 text-white font-medium shadow-sm">
+                        1
+                    </button>
+                    <button class="w-8 h-8 flex items-center justify-center rounded border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-colors">
+                        <i class="fas fa-chevron-right text-xs"></i>
+                    </button>
+                </div>
+                
+                <div class="flex items-center text-sm text-gray-600 ml-2">
+                    <span class="mr-2">跳至</span>
+                    <input type="text" class="w-10 h-8 border border-gray-300 rounded text-center focus:outline-none focus:ring-1 focus:ring-blue-500 mx-1 transition-shadow">
+                    <span class="ml-1">页</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const users = [
+            { id: 1, username: 'super_admin', createTime: '2023-03-14 10:25:48', updateTime: '2024-3-25 14:28:36', role: '超级管理员' },
+            { id: 2, username: 'office1', createTime: '2024-06-14 08:43:48', updateTime: '2024-8-25 14:28:36', role: '教务管理员' },
+            { id: 3, username: 'admin1', createTime: '2024-08-19 14:23:48', updateTime: '2024-9-13 14:28:36', role: '管理员' },
+            { id: 4, username: 'teacher1', createTime: '2023-03-14 10:25:48', updateTime: '2024-3-25 14:28:36', role: '教师' },
+            { id: 5, username: 'office3', createTime: '2024-06-14 08:43:48', updateTime: '2024-8-25 14:28:36', role: '教务管理员' },
+            { id: 6, username: 'teacher2', createTime: '2024-08-19 14:23:48', updateTime: '2024-9-13 14:28:36', role: '教师' },
+            { id: 7, username: 'office4', createTime: '2023-03-14 10:25:48', updateTime: '2024-3-25 14:28:36', role: '教务管理员' },
+            { id: 8, username: 'teacher3', createTime: '2024-06-14 08:43:48', updateTime: '2024-8-25 14:28:36', role: '教师' },
+        ];
+
+        const roleStyles = {
+            '超级管理员': 'bg-red-100 text-red-600 border border-red-200',
+            '教务管理员': 'bg-blue-100 text-blue-600 border border-blue-200',
+            '管理员': 'bg-purple-100 text-purple-600 border border-purple-200',
+            '教师': 'bg-green-100 text-green-600 border border-green-200'
+        };
+
+        const tableBody = document.getElementById('user-table-body');
+
+        users.forEach(user => {
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-gray-50 transition-colors group';
+            
+            row.innerHTML = `
+                <td class="px-6 py-5 text-center">
+                    <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4 cursor-pointer">
+                </td>
+                <td class="px-6 py-5 text-center font-medium text-gray-700">${user.username}</td>
+                <td class="px-6 py-5 text-center text-gray-500 font-mono text-xs">${user.createTime}</td>
+                <td class="px-6 py-5 text-center text-gray-500 font-mono text-xs">${user.updateTime}</td>
+                <td class="px-6 py-5 text-center">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${roleStyles[user.role]} shadow-sm">
+                        ${user.role}
+                    </span>
+                </td>
+                <td class="px-6 py-5 text-center">
+                    <div class="flex items-center justify-center gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+                        <button class="flex items-center text-blue-600 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded text-xs font-medium transition-all gap-1" title="编辑">
+                            <i class="far fa-edit"></i> 编辑
+                        </button>
+                        <button class="flex items-center text-amber-600 bg-amber-50 hover:bg-amber-100 px-2 py-1 rounded text-xs font-medium transition-all gap-1" title="重置密码">
+                            <i class="fas fa-lock"></i> 重置
+                        </button>
+                        <button class="flex items-center text-purple-600 bg-purple-50 hover:bg-purple-100 px-2 py-1 rounded text-xs font-medium transition-all gap-1" title="分配角色">
+                            <i class="far fa-user"></i> 角色
+                        </button>
+                        <button class="flex items-center text-red-600 bg-red-50 hover:bg-red-100 px-2 py-1 rounded text-xs font-medium transition-all gap-1" title="删除">
+                            <i class="far fa-trash-alt"></i> 删除
+                        </button>
+                    </div>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+    </script>
+</body>
+</html>

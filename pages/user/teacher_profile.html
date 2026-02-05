@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>教师个人主页 - iClass智慧课堂</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB', // Blue 600
+                        secondary: '#60A5FA', // Blue 400
+                        surface: '#ffffff',
+                        background: '#F3F4F6',
+                    },
+                    animation: {
+                        'fade-in-up': 'fadeInUp 0.6s ease-out forwards',
+                        'slide-in-right': 'slideInRight 0.5s ease-out forwards',
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        slideInRight: {
+                            '0%': { opacity: '0', transform: 'translateX(20px)' },
+                            '100%': { opacity: '1', transform: 'translateX(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #F8FAFC;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+        .glass-card-decoration {
+            position: absolute;
+            z-index: 0;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.6;
+        }
+        .stat-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        /* Custom scrollbar for table */
+        .custom-scroll::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden text-gray-800">
+    
+    <!-- Top Decoration -->
+    <div class="fixed top-0 left-0 w-full h-64 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 -z-10"></div>
+    <div class="fixed top-[-10%] right-[-5%] w-96 h-96 bg-blue-400/20 rounded-full blur-3xl -z-10"></div>
+    <div class="fixed top-[20%] left-[-10%] w-72 h-72 bg-cyan-400/20 rounded-full blur-3xl -z-10"></div>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto overflow-x-hidden p-6 custom-scroll">
+        <div class="max-w-7xl mx-auto space-y-6">
+            
+            <!-- Breadcrumb & Back -->
+            <div class="flex items-center justify-between mb-2 animate-fade-in-up" style="animation-delay: 0.05s;">
+                <button onclick="history.back()" class="flex items-center text-gray-500 hover:text-blue-600 transition-colors group">
+                    <div class="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center mr-2 group-hover:border-blue-200 group-hover:shadow-sm transition-all">
+                        <i class="fas fa-arrow-left text-sm transform group-hover:-translate-x-0.5 transition-transform"></i>
+                    </div>
+                    <span class="text-sm font-medium">返回列表</span>
+                </button>
+                <div class="flex gap-2">
+                    <button class="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-sm hover:bg-gray-50 shadow-sm transition-all hover:text-blue-600 hover:border-blue-200 transform hover:scale-105 active:scale-95 duration-200">
+                        <i class="fas fa-file-export mr-1.5"></i> 导出教学数据
+                    </button>
+                </div>
+            </div>
+
+            <!-- Profile Header Card -->
+            <div class="glass-panel rounded-2xl p-6 relative overflow-hidden animate-fade-in-up" style="animation-delay: 0.1s;">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-blue-50/50 rounded-full -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+                
+                <div class="flex flex-col md:flex-row items-center md:items-start gap-8 relative z-10">
+                    <!-- Avatar -->
+                    <div class="shrink-0 relative group">
+                        <div class="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg relative bg-gray-100 ring-1 ring-gray-100">
+                            <img src="" alt="Avatar" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" id="profile-avatar">
+                            <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300"></div>
+                        </div>
+                        <div class="absolute bottom-2 right-2 w-5 h-5 bg-green-500 border-2 border-white rounded-full shadow-sm" title="在线"></div>
+                    </div>
+
+                    <!-- Info -->
+                    <div class="flex-1 text-center md:text-left space-y-4 pt-2">
+                        <div class="flex flex-col md:flex-row items-center gap-3 justify-center md:justify-start">
+                            <h1 class="text-3xl font-bold text-gray-900 tracking-tight" id="profile-name">加载中...</h1>
+                            <div class="flex gap-2">
+                                <span class="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600 text-xs font-semibold border border-blue-100" id="profile-id">ID: --</span>
+                                <span class="px-2.5 py-0.5 rounded-full bg-cyan-50 text-cyan-600 text-xs font-semibold border border-cyan-100">高级讲师</span>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-gray-600 max-w-2xl mx-auto md:mx-0">
+                            <div class="flex items-center gap-3 justify-center md:justify-start bg-gray-50/50 px-3 py-2 rounded-lg border border-gray-100/50">
+                                <div class="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-blue-500 shrink-0">
+                                    <i class="fas fa-university text-sm"></i>
+                                </div>
+                                <div class="text-left">
+                                    <p class="text-xs text-gray-400">所属学院</p>
+                                    <p class="text-sm font-medium text-gray-700" id="profile-college">--</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 justify-center md:justify-start bg-gray-50/50 px-3 py-2 rounded-lg border border-gray-100/50">
+                                <div class="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-pink-500 shrink-0">
+                                    <i class="fas fa-venus-mars text-sm"></i>
+                                </div>
+                                <div class="text-left">
+                                    <p class="text-xs text-gray-400">性别</p>
+                                    <p class="text-sm font-medium text-gray-700" id="profile-gender">--</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 justify-center md:justify-start bg-gray-50/50 px-3 py-2 rounded-lg border border-gray-100/50">
+                                <div class="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-blue-500 shrink-0">
+                                    <i class="fas fa-phone text-sm"></i>
+                                </div>
+                                <div class="text-left">
+                                    <p class="text-xs text-gray-400">联系电话</p>
+                                    <p class="text-sm font-medium text-gray-700 font-mono" id="profile-phone">--</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-2 flex flex-wrap gap-2 justify-center md:justify-start">
+                            <span class="px-3 py-1 rounded-full bg-gray-100 text-gray-500 text-xs">入职时间: 2020-09-01</span>
+                            <span class="px-3 py-1 rounded-full bg-gray-100 text-gray-500 text-xs">职称: 副教授</span>
+                            <span class="px-3 py-1 rounded-full bg-green-50 text-green-600 text-xs border border-green-100">状态: 在职</span>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="shrink-0 flex flex-col sm:flex-row gap-3 mt-4 md:mt-0">
+                        <button onclick="openEditModal()" class="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/30 transition-all shadow-md font-medium text-sm flex items-center justify-center gap-2 transform active:scale-95 duration-200">
+                            <i class="fas fa-pen text-xs"></i> 编辑资料
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in-up" style="animation-delay: 0.2s;">
+                <!-- Card 1 -->
+                <div class="glass-panel rounded-xl p-5 stat-card relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 p-4 opacity-10 transform translate-x-2 -translate-y-2 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-user-graduate text-5xl text-blue-600"></i>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shadow-sm">
+                            <i class="fas fa-user-graduate text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">授课学生</p>
+                            <h3 class="text-2xl font-bold text-gray-800 mt-0.5" id="stat-student-count">1,234</h3>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center text-xs text-gray-500">
+                        <span class="text-green-500 flex items-center font-medium bg-green-50 px-1.5 py-0.5 rounded mr-2">
+                            <i class="fas fa-arrow-up text-[10px] mr-1"></i> 12%
+                        </span>
+                        <span>较上学期</span>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="glass-panel rounded-xl p-5 stat-card relative overflow-hidden group">
+                     <div class="absolute right-0 top-0 p-4 opacity-10 transform translate-x-2 -translate-y-2 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-book-open text-5xl text-cyan-600"></i>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-cyan-50 flex items-center justify-center text-cyan-600 shadow-sm">
+                            <i class="fas fa-book-open text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">执教课程</p>
+                            <h3 class="text-2xl font-bold text-gray-800 mt-0.5" id="stat-course-count">12</h3>
+                        </div>
+                    </div>
+                     <div class="mt-4 flex items-center text-xs text-gray-500">
+                        <span class="text-blue-500 flex items-center font-medium bg-blue-50 px-1.5 py-0.5 rounded mr-2">
+                            <i class="fas fa-plus text-[10px] mr-1"></i> 2
+                        </span>
+                        <span>本学期新增</span>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="glass-panel rounded-xl p-5 stat-card relative overflow-hidden group">
+                     <div class="absolute right-0 top-0 p-4 opacity-10 transform translate-x-2 -translate-y-2 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-chalkboard-teacher text-5xl text-orange-600"></i>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600 shadow-sm">
+                            <i class="fas fa-chalkboard-teacher text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">课堂互动</p>
+                            <h3 class="text-2xl font-bold text-gray-800 mt-0.5" id="stat-interaction-count">856</h3>
+                        </div>
+                    </div>
+                     <div class="mt-4 flex items-center text-xs text-gray-500">
+                        <div class="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                            <div class="h-full bg-orange-500 w-[75%] rounded-full"></div>
+                        </div>
+                        <span class="ml-2">75% 活跃</span>
+                    </div>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="glass-panel rounded-xl p-5 stat-card relative overflow-hidden group">
+                     <div class="absolute right-0 top-0 p-4 opacity-10 transform translate-x-2 -translate-y-2 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-star text-5xl text-yellow-500"></i>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-yellow-50 flex items-center justify-center text-yellow-600 shadow-sm">
+                            <i class="fas fa-star text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">教学评分</p>
+                            <h3 class="text-2xl font-bold text-gray-800 mt-0.5">4.9</h3>
+                        </div>
+                    </div>
+                     <div class="mt-4 flex text-xs text-yellow-400 gap-0.5">
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
+                        <span class="ml-2 text-gray-400"> (128人评价)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Section: Course List -->
+            <div class="glass-panel rounded-2xl p-6 animate-fade-in-up" style="animation-delay: 0.3s;">
+                <div class="flex flex-wrap items-center justify-between mb-6 gap-4">
+                    <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                        <span class="w-1.5 h-6 bg-blue-600 rounded-full"></span>
+                        授课列表
+                    </h2>
+                    
+                    <!-- Filters -->
+                    <div class="flex items-center gap-3">
+                        <!-- Year Dropdown -->
+                        <div class="relative" id="dd-year">
+                            <button onclick="toggleDropdown('year', event)" class="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 py-2 px-4 rounded-lg text-sm hover:shadow-sm hover:border-blue-300 transition-all focus:outline-none w-40 justify-between group">
+                                <span id="label-year">2023-2024学年</span>
+                                <i class="fas fa-chevron-down text-xs text-gray-400 group-hover:text-blue-500 transition-transform duration-200" id="icon-year"></i>
+                            </button>
+                            <div id="menu-year" class="hidden absolute top-full right-0 mt-2 w-full bg-white rounded-xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.1)] border border-gray-100 py-1.5 z-20 transform origin-top transition-all duration-200 opacity-0 scale-95">
+                                <div onclick="selectFilter('year', '2023-2024', '2023-2024学年')" class="px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors flex items-center justify-between group/item">
+                                    <span>2023-2024学年</span>
+                                    <i class="fas fa-check text-blue-500 opacity-0 group-hover/item:opacity-100 transition-opacity text-xs"></i>
+                                </div>
+                                <div onclick="selectFilter('year', '2022-2023', '2022-2023学年')" class="px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors flex items-center justify-between group/item">
+                                    <span>2022-2023学年</span>
+                                    <i class="fas fa-check text-blue-500 opacity-0 group-hover/item:opacity-100 transition-opacity text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Semester Dropdown -->
+                        <div class="relative" id="dd-semester">
+                            <button onclick="toggleDropdown('semester', event)" class="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 py-2 px-4 rounded-lg text-sm hover:shadow-sm hover:border-blue-300 transition-all focus:outline-none w-32 justify-between group">
+                                <span id="label-semester">第一学期</span>
+                                <i class="fas fa-chevron-down text-xs text-gray-400 group-hover:text-blue-500 transition-transform duration-200" id="icon-semester"></i>
+                            </button>
+                            <div id="menu-semester" class="hidden absolute top-full right-0 mt-2 w-full bg-white rounded-xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.1)] border border-gray-100 py-1.5 z-20 transform origin-top transition-all duration-200 opacity-0 scale-95">
+                                <div onclick="selectFilter('semester', '第一学期', '第一学期')" class="px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors flex items-center justify-between group/item">
+                                    <span>第一学期</span>
+                                    <i class="fas fa-check text-blue-500 opacity-0 group-hover/item:opacity-100 transition-opacity text-xs"></i>
+                                </div>
+                                <div onclick="selectFilter('semester', '第二学期', '第二学期')" class="px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors flex items-center justify-between group/item">
+                                    <span>第二学期</span>
+                                    <i class="fas fa-check text-blue-500 opacity-0 group-hover/item:opacity-100 transition-opacity text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto rounded-xl border border-gray-100">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-gray-50/50 text-gray-500 font-medium border-b border-gray-100">
+                            <tr>
+                                <th class="px-6 py-4 w-20 text-center">序号</th>
+                                <th class="px-6 py-4">课程名称</th>
+                                <th class="px-6 py-4">班级</th>
+                                <th class="px-6 py-4">上课时间</th>
+                                <th class="px-6 py-4">教室</th>
+                                <th class="px-6 py-4 text-center">选课人数</th>
+                                <th class="px-6 py-4 text-center">课程互动</th>
+                                <th class="px-6 py-4 text-center">状态</th>
+                                <th class="px-6 py-4 text-right">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 bg-white" id="course-list-body">
+                            <!-- JS Generated -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div id="pagination-container" class="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <!-- JS Generated -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-4 right-4 bg-white border border-green-100 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-lg p-4 flex items-center gap-3 transform translate-x-[120%] transition-transform duration-300 z-[100]">
+        <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-500 shrink-0">
+            <i class="fas fa-check"></i>
+        </div>
+        <div>
+            <h4 class="font-bold text-gray-800 text-sm">操作成功</h4>
+            <p class="text-xs text-gray-500 mt-0.5" id="toast-msg">资料已更新</p>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-[100] backdrop-blur-sm transition-opacity opacity-0">
+        <div class="bg-white rounded-xl shadow-2xl w-96 transform scale-95 transition-transform duration-200" id="edit-modal-content">
+            <div class="flex justify-between items-center p-5 border-b border-gray-100">
+                <h3 class="text-lg font-bold text-gray-800">编辑教师信息</h3>
+                <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="p-5 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">姓名</label>
+                    <input type="text" id="edit-name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">联系电话</label>
+                    <input type="text" id="edit-phone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
+                </div>
+            </div>
+
+            <div class="p-5 border-t border-gray-100 flex justify-end gap-3">
+                <button onclick="closeEditModal()" class="px-4 py-2 text-sm text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors font-medium">取消</button>
+                <button onclick="saveProfile()" class="px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors font-medium shadow-sm hover:shadow transform active:scale-95 duration-100">保存修改</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Mock Data Generation based on ID ---
+        
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            var results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+
+        const teacherId = getUrlParameter('id') || '010510001';
+        
+        // Simulating data fetch
+        let mockTeacher = {
+            id: teacherId,
+            name: "张伟", // Default fallback
+            college: "计算机科学与技术学院",
+            gender: "男",
+            phone: "13800138000"
+        };
+
+        // Try to get data from localStorage or generate consistent random data based on ID
+        // Simple hash function to get consistent random
+        function pseudoRandom(seed) {
+            let value = 0;
+            for(let i=0; i<seed.length; i++) value += seed.charCodeAt(i);
+            return function() {
+                value = (value * 9301 + 49297) % 233280;
+                return value / 233280;
+            }
+        }
+        
+        const rng = pseudoRandom(teacherId);
+        
+        // Generate consistent data if not overridden
+        const lastNames = ["王", "李", "张", "刘", "陈", "杨", "黄", "赵", "周", "吴"];
+        const firstNames = ["伟", "芳", "娜", "敏", "静", "秀英", "丽", "强", "磊", "洋"];
+        const colleges = ["计算机科学与技术学院", "艺术设计学院", "外国语学院", "理学院", "机械工程学院"];
+        
+        mockTeacher.name = lastNames[Math.floor(rng() * lastNames.length)] + firstNames[Math.floor(rng() * firstNames.length)];
+        mockTeacher.college = colleges[Math.floor(rng() * colleges.length)];
+        mockTeacher.gender = rng() > 0.5 ? "男" : "女";
+        mockTeacher.phone = "1" + Math.floor(30 + rng() * 60) + Math.floor(10000000 + rng() * 90000000).toString().substring(1);
+
+        // Override with URL params if available
+        const urlName = getUrlParameter('name');
+        if(urlName) mockTeacher.name = urlName;
+        
+        const urlPhone = getUrlParameter('phone');
+        if(urlPhone) mockTeacher.phone = urlPhone;
+
+        const urlCollege = getUrlParameter('college');
+        if(urlCollege) mockTeacher.college = urlCollege;
+
+        const urlGender = getUrlParameter('gender');
+        if(urlGender) mockTeacher.gender = urlGender;
+
+        // --- CHECK LOCAL STORAGE FOR UPDATES ---
+        const updates = JSON.parse(localStorage.getItem('teacher_updates') || '{}');
+        if (updates[teacherId]) {
+            mockTeacher = { ...mockTeacher, ...updates[teacherId] };
+        }
+
+        // --- Render ---
+        document.getElementById('profile-id').textContent = 'ID: ' + mockTeacher.id;
+        document.getElementById('profile-name').textContent = mockTeacher.name;
+        document.getElementById('profile-college').textContent = mockTeacher.college;
+        document.getElementById('profile-gender').textContent = mockTeacher.gender;
+        document.getElementById('profile-phone').textContent = mockTeacher.phone;
+        
+        // Avatar generation
+        document.getElementById('profile-avatar').src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${mockTeacher.id}&backgroundColor=b6e3f4`;
+
+
+        // --- Interaction Logic ---
+
+        function openEditModal() {
+            document.getElementById('edit-name').value = mockTeacher.name;
+            document.getElementById('edit-phone').value = mockTeacher.phone;
+            
+            const modal = document.getElementById('edit-modal');
+            const content = document.getElementById('edit-modal-content');
+            modal.classList.remove('hidden');
+            void modal.offsetWidth; // Trigger reflow
+            modal.classList.remove('opacity-0');
+            content.classList.remove('scale-95');
+        }
+
+        function closeEditModal() {
+            const modal = document.getElementById('edit-modal');
+            const content = document.getElementById('edit-modal-content');
+            
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-95');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+
+        function saveProfile() {
+            const newName = document.getElementById('edit-name').value;
+            const newPhone = document.getElementById('edit-phone').value;
+            
+            if(!newName || !newPhone) {
+                alert('请填写完整信息');
+                return;
+            }
+
+            // Update local object
+            mockTeacher.name = newName;
+            mockTeacher.phone = newPhone;
+            
+            // Update UI
+            document.getElementById('profile-name').textContent = newName;
+            document.getElementById('profile-phone').textContent = newPhone;
+
+            // Save to LocalStorage
+            const allUpdates = JSON.parse(localStorage.getItem('teacher_updates') || '{}');
+            allUpdates[teacherId] = {
+                ...(allUpdates[teacherId] || {}),
+                name: newName,
+                phone: newPhone
+            };
+            localStorage.setItem('teacher_updates', JSON.stringify(allUpdates));
+
+            closeEditModal();
+            showToast('资料修改成功');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toast-msg');
+            msgEl.textContent = msg;
+            
+            toast.classList.remove('translate-x-[120%]');
+            setTimeout(() => {
+                toast.classList.add('translate-x-[120%]');
+            }, 3000);
+        }
+
+        // --- Render Courses ---
+        // Mock Course Data
+        const allCourses = [];
+        const courseNames = ["高等数学", "线性代数", "离散数学", "概率论与数理统计", "大学物理", "计算机导论", "C语言程序设计", "数据结构", "算法分析", "操作系统", "计算机网络", "数据库原理", "软件工程", "人工智能导论", "机器学习", "深度学习"];
+        const classNames = ["计算机", "软件", "网络", "AI", "物联网", "信息安全"];
+        
+        // Generate ~30 mock courses
+        for(let i=0; i<30; i++) {
+            const year = Math.random() > 0.4 ? "2023-2024" : "2022-2023";
+            const semester = Math.random() > 0.5 ? "第一学期" : "第二学期";
+            const name = courseNames[Math.floor(Math.random() * courseNames.length)] + (Math.random() > 0.7 ? " A" : "");
+            const cls = classNames[Math.floor(Math.random() * classNames.length)] + (2000 + Math.floor(Math.random() * 4)) + "0" + (1 + Math.floor(Math.random() * 3));
+            
+            allCourses.push({
+                id: i,
+                name: name,
+                class: cls,
+                time: `周${["一","二","三","四","五"][Math.floor(Math.random()*5)]} ${1+Math.floor(Math.random()*4)*2}-${2+Math.floor(Math.random()*4)*2}节`,
+                room: String.fromCharCode(65+Math.floor(Math.random()*3)) + "-" + (100+Math.floor(Math.random()*400)),
+                count: 30 + Math.floor(Math.random() * 30),
+                interaction: 20 + Math.floor(Math.random() * 80),
+                status: year === "2023-2024" && semester === "第一学期" ? (Math.random() > 0.3 ? "ongoing" : "finished") : "finished",
+                year: year,
+                semester: semester
+            });
+        }
+
+        // State
+        let currentPage = 1;
+        let pageSize = 6;
+        let filteredCourses = [];
+        let currentYear = "2023-2024";
+        let currentSemester = "第一学期";
+
+        // Dropdown Logic
+        function toggleDropdown(type, event) {
+            event.stopPropagation();
+            const menu = document.getElementById(`menu-${type}`);
+            const icon = document.getElementById(`icon-${type}`);
+            
+            // Close other dropdowns
+            ['year', 'semester'].forEach(t => {
+                if (t !== type) {
+                    const otherMenu = document.getElementById(`menu-${t}`);
+                    const otherIcon = document.getElementById(`icon-${t}`);
+                    if (!otherMenu.classList.contains('hidden')) {
+                        closeDropdown(t);
+                    }
+                }
+            });
+
+            if (menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+                setTimeout(() => {
+                    menu.classList.remove('opacity-0', 'scale-95');
+                    icon.classList.add('rotate-180');
+                }, 10);
+            } else {
+                closeDropdown(type);
+            }
+        }
+
+        function closeDropdown(type) {
+            const menu = document.getElementById(`menu-${type}`);
+            const icon = document.getElementById(`icon-${type}`);
+            menu.classList.add('opacity-0', 'scale-95');
+            icon.classList.remove('rotate-180');
+            setTimeout(() => {
+                menu.classList.add('hidden');
+            }, 200);
+        }
+
+        function selectFilter(type, value, label) {
+            if (type === 'year') currentYear = value;
+            if (type === 'semester') currentSemester = value;
+            
+            document.getElementById(`label-${type}`).textContent = label;
+            closeDropdown(type);
+            
+            // Update UI active state logic could go here
+            // Re-rendering dropdowns to show checkmarks would be ideal but optional for now
+            
+            handleFilterChange();
+        }
+
+        // Close dropdowns when clicking outside
+        window.onclick = function(event) {
+            if (!event.target.closest('.relative')) {
+                ['year', 'semester'].forEach(type => {
+                    const menu = document.getElementById(`menu-${type}`);
+                    if (menu && !menu.classList.contains('hidden')) {
+                        closeDropdown(type);
+                    }
+                });
+            }
+        }
+
+        function handleFilterChange() {
+            currentPage = 1;
+            renderTable();
+        }
+
+        function changePage(page) {
+            const totalPages = Math.ceil(filteredCourses.length / pageSize);
+            page = parseInt(page);
+            if (page < 1 || page > totalPages || page === currentPage) return;
+            currentPage = page;
+            renderTable();
+            renderPagination();
+        }
+
+        function handlePageSizeChange(size) {
+            pageSize = parseInt(size);
+            currentPage = 1;
+            renderTable();
+            renderPagination();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('course-list-body');
+            
+            // Filter
+            filteredCourses = allCourses.filter(c => c.year === currentYear && c.semester === currentSemester);
+
+            // Update Stats
+            document.getElementById('stat-course-count').textContent = filteredCourses.length;
+            const totalStudents = filteredCourses.reduce((sum, c) => sum + c.count, 0);
+            document.getElementById('stat-student-count').textContent = totalStudents.toLocaleString();
+            
+            const totalInteraction = filteredCourses.reduce((sum, c) => sum + c.interaction, 0);
+            document.getElementById('stat-interaction-count').textContent = totalInteraction.toLocaleString();
+
+            // Pagination
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            const pageData = filteredCourses.slice(start, end);
+
+            let html = '';
+            if (pageData.length === 0) {
+                html = `<tr><td colspan="9" class="px-6 py-8 text-center text-gray-500">暂无课程数据</td></tr>`;
+            } else {
+                pageData.forEach((c, index) => {
+                    const statusBadge = c.status === 'ongoing' 
+                        ? '<span class="px-2.5 py-0.5 rounded-full bg-green-50 text-green-600 border border-green-100 text-xs font-medium">进行中</span>'
+                        : '<span class="px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200 text-xs font-medium">已结课</span>';
+                    
+                    const globalIndex = start + index + 1;
+
+                    html += `
+                        <tr class="hover:bg-gray-50/80 transition-colors">
+                            <td class="px-6 py-4 text-center text-gray-500 font-medium">${globalIndex}</td>
+                            <td class="px-6 py-4">
+                                <span class="font-medium text-gray-800">${c.name}</span>
+                            </td>
+                            <td class="px-6 py-4 text-gray-600">${c.class}</td>
+                            <td class="px-6 py-4 text-gray-600">${c.time}</td>
+                            <td class="px-6 py-4 text-gray-600">${c.room}</td>
+                            <td class="px-6 py-4 text-center text-gray-600 font-medium">${c.count}</td>
+                            <td class="px-6 py-4 text-center text-gray-600 font-medium">
+                                ${c.interaction}
+                            </td>
+                            <td class="px-6 py-4 text-center">${statusBadge}</td>
+                            <td class="px-6 py-4 text-right">
+                                <button class="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors">详情</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+            tbody.innerHTML = html;
+
+            renderPagination();
+        }
+
+        function renderPagination() {
+            const container = document.getElementById('pagination-container');
+            const totalItems = filteredCourses.length;
+            
+            if (totalItems === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            const totalPages = Math.ceil(totalItems / pageSize);
+            
+            let html = `
+                <div class="text-sm text-gray-600 font-medium">
+                    共 ${totalItems} 条
+                </div>
+                <div class="flex items-center space-x-3">
+                    <div class="relative group">
+                        <select onchange="handlePageSizeChange(this.value)" class="appearance-none bg-white border border-gray-300 text-gray-700 py-1.5 pl-3 pr-8 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-shadow cursor-pointer">
+                            <option value="6" ${pageSize == 6 ? 'selected' : ''}>6条/页</option>
+                            <option value="10" ${pageSize == 10 ? 'selected' : ''}>10条/页</option>
+                            <option value="20" ${pageSize == 20 ? 'selected' : ''}>20条/页</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400 group-hover:text-blue-500 transition-colors">
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-1">
+                        <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="w-8 h-8 flex items-center justify-center rounded border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-chevron-left text-xs"></i>
+                        </button>
+            `;
+
+            // Page numbers logic matching teacher.html
+            // "Reference Fig 3... max show 6 pages" might mean limited buttons. 
+            // teacher.html logic: 1, last, current+/-1.
+            // Let's implement that standard logic.
+            
+            for (let i = 1; i <= totalPages; i++) {
+                // Show first, last, current, and neighbors
+                // Also ensures we don't show too many buttons if "max 6" meant buttons.
+                // But standard logic usually is safe.
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    const isActive = i === currentPage;
+                    html += `
+                        <button onclick="changePage(${i})" class="w-8 h-8 flex items-center justify-center rounded border ${isActive ? 'border-blue-500 bg-blue-500 text-white font-medium shadow-sm' : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-colors'}">
+                            ${i}
+                        </button>
+                    `;
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    html += `<span class="w-8 h-8 flex items-center justify-center text-gray-400">...</span>`;
+                }
+            }
+
+            html += `
+                        <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="w-8 h-8 flex items-center justify-center rounded border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-chevron-right text-xs"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="flex items-center text-sm text-gray-600 ml-2">
+                        <span class="mr-2">跳至</span>
+                        <input type="number" min="1" max="${totalPages}" onchange="changePage(this.value)" class="w-12 h-8 border border-gray-300 rounded text-center focus:outline-none focus:ring-1 focus:ring-blue-500 mx-1 transition-shadow" value="${currentPage}">
+                        <span class="ml-1">页</span>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        renderTable();
+
+    </script>
+</body>
+</html>

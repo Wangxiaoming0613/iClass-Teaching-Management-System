@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - iClass后台管理系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* 引入全局字体 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+        }
+
+        /* 
+         * iClass 玻璃拟态与轻拟态核心样式 
+         * 参考: iclass-login-glass-neu-ui-spec
+         */
+
+        /* 背景图容器 */
+        .login-bg {
+            background-image: url('assets/images/loginindex.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        /* 玻璃卡片 */
+        .glass-card {
+            background-color: rgba(255, 255, 255, 0.3); /* Glass / 30 */
+            backdrop-filter: blur(12px); /* Blur / md */
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3); /* Border / white-30 */
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); /* Surface / card */
+            animation: slideUp 0.5s ease-out; /* 页面入场动画 */
+        }
+
+        /* 输入框 - 轻拟态 Inset */
+        .neu-input {
+            background-color: rgba(255, 255, 255, 0.2); /* Glass / 20 */
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3) inset; /* Inset Outline / default */
+            color: #000000;
+            transition: all 0.3s ease;
+        }
+
+        .neu-input::placeholder {
+            color: #FFFFFF; /* Placeholder / White */
+            opacity: 1;
+        }
+
+        .neu-input:hover {
+            background-color: rgba(255, 255, 255, 0.3); /* Glass / 30 */
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.6) inset; /* Inset Outline / hover */
+        }
+
+        .neu-input:focus {
+            outline: none;
+            background-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 0 1px #1890FF inset; /* Inset Outline / focus (Primary) */
+        }
+
+        /* 错误状态 */
+        .neu-input.error {
+            box-shadow: 0 0 0 1px #f56c6c inset !important; /* Inset Outline / error */
+        }
+
+        /* 登录按钮 */
+        .neu-btn-primary {
+            background-color: rgba(24, 144, 255, 0.8); /* Primary 500 / 80 */
+            border: 1px solid rgba(255, 255, 255, 0.2); /* Border / white-20 */
+            color: #FFFFFF;
+            backdrop-filter: blur(4px); /* Blur / sm */
+            box-shadow: 0 4px 14px 0 rgba(24, 144, 255, 0.39); /* Primary Glow / default */
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .neu-btn-primary:hover {
+            background-color: #1890FF; /* Primary 500 */
+            border-color: #1890FF;
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(24, 144, 255, 0.23); /* Primary Glow / hover */
+        }
+
+        .neu-btn-primary:active {
+            transform: scale(0.95);
+        }
+
+        /* 入场动画关键帧 */
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body class="login-bg min-h-screen w-full flex items-center justify-center overflow-hidden">
+
+    <!-- 玻璃卡片容器 -->
+    <div class="glass-card relative z-10 w-[380px] min-h-[390px] rounded-2xl px-8 py-10 flex flex-col justify-center">
+        
+        <!-- 标题区域 -->
+        <div class="mb-10">
+            <h1 class="text-xl font-bold text-gray-800 mb-2">iClass后台管理系统</h1>
+            <h2 class="text-3xl font-bold text-gray-900">登录</h2>
+        </div>
+
+        <!-- 表单区域 -->
+        <form id="loginForm" class="w-full" onsubmit="event.preventDefault();">
+            <!-- 用户名输入框 -->
+            <div class="mb-8 relative group">
+                <input 
+                    type="text" 
+                    id="username" 
+                    class="neu-input w-full h-[36px] px-[11px] rounded text-sm"
+                    placeholder="请输入用户名"
+                    autocomplete="off"
+                >
+            </div>
+            
+            <!-- 密码输入框 -->
+            <div class="mb-4 relative group">
+                <input 
+                    type="password" 
+                    id="password" 
+                    class="neu-input w-full h-[36px] px-[11px] pr-[30px] rounded text-sm"
+                    placeholder="请输入密码"
+                    autocomplete="off"
+                >
+                <!-- 眼睛图标 -->
+                <i 
+                    id="togglePassword"
+                    class="fas fa-eye-slash absolute right-3 top-1/2 -translate-y-1/2 text-black/60 cursor-pointer hover:text-black transition-colors text-sm z-10"
+                ></i>
+            </div>
+
+            <!-- 底部操作区：错误提示与按钮 -->
+            <div class="flex justify-between items-start mt-8 relative">
+                <!-- 错误提示信息 -->
+                <div 
+                    id="errorMsg" 
+                    class="text-[#FF0000] text-xs h-5 flex items-start -mt-3 absolute left-0 top-0 w-[200px]"
+                >
+                    <!-- 动态插入错误信息 -->
+                </div>
+                
+                <!-- 登录按钮 (右浮动) -->
+                <button 
+                    type="submit" 
+                    id="loginBtn"
+                    class="neu-btn-primary w-24 h-9 text-sm font-medium rounded-lg ml-auto cursor-pointer flex items-center justify-center"
+                >
+                    登录
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // DOM 元素
+        const loginForm = document.getElementById('loginForm');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const togglePasswordBtn = document.getElementById('togglePassword');
+        const errorMsg = document.getElementById('errorMsg');
+        const loginBtn = document.getElementById('loginBtn');
+
+        // 状态清除逻辑
+        function clearError(input) {
+            errorMsg.textContent = '';
+            if (input) {
+                input.classList.remove('error');
+            } else {
+                usernameInput.classList.remove('error');
+                passwordInput.classList.remove('error');
+            }
+        }
+
+        // 输入监听：聚焦或修改时清除错误
+        [usernameInput, passwordInput].forEach(input => {
+            input.addEventListener('focus', () => clearError(input));
+            input.addEventListener('input', () => clearError(input));
+        });
+
+        // 密码显示/隐藏切换
+        togglePasswordBtn.addEventListener('click', () => {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            // 切换图标
+            togglePasswordBtn.classList.toggle('fa-eye');
+            togglePasswordBtn.classList.toggle('fa-eye-slash');
+        });
+
+        // 登录校验逻辑
+        loginBtn.addEventListener('click', (e) => {
+            e.preventDefault(); // 阻止默认提交，由 JS 处理
+            
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value;
+            
+            // 重置错误状态
+            clearError();
+
+            // 1. 非空校验
+            if (!username) {
+                errorMsg.textContent = '用户名为空';
+                usernameInput.classList.add('error');
+                return;
+            }
+
+            // 2. 用户名规则校验 (字母或数字，长度不超过8)
+            const usernameRegex = /^[a-zA-Z0-9]+$/;
+            if (!usernameRegex.test(username) || username.length > 8) {
+                errorMsg.textContent = '用户名长度不得大于8！'; // 保持 PRD 文案
+                usernameInput.classList.add('error');
+                return;
+            }
+
+            if (!password) {
+                errorMsg.textContent = '密码为空';
+                passwordInput.classList.add('error');
+                return;
+            }
+
+            // 3. 密码规则校验 (长度6-12)
+            if (password.length < 6 || password.length > 12) {
+                errorMsg.textContent = '密码长度为6-12位！请检查！！！';
+                passwordInput.classList.add('error');
+                return;
+            }
+
+            // 4. 账号密码匹配校验 (Mock: admin123 / admin123)
+            // 注意：PRD 中提到用户名长度不超过 8，但 admin123 长度是 8，符合要求
+            if (username === 'admin123' && password === 'admin123') {
+                // 登录成功
+                window.location.href = 'index.html';
+            } else {
+                // 登录失败
+                errorMsg.textContent = '用户名密码错误！！！';
+                usernameInput.classList.add('error');
+                passwordInput.classList.add('error');
+            }
+        });
+    </script>
+</body>
+</html>

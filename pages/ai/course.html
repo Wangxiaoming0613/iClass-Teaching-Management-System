@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI课程 - iClass智慧课堂</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom scrollbar */
+        .table-container::-webkit-scrollbar {
+            height: 10px;
+            width: 10px;
+        }
+        .table-container::-webkit-scrollbar-track {
+            background: #f8fafc;
+            border-radius: 4px;
+        }
+        .table-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 5px;
+            border: 2px solid #f8fafc;
+        }
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        .text-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            height: 40px;
+            line-height: 20px;
+            white-space: normal;
+        }
+
+        /* Toggle Switch */
+        .toggle-checkbox {
+            left: 0;
+            transition: all 0.3s;
+        }
+        .toggle-checkbox:checked {
+            transform: translateX(100%);
+            border-color: #68D391;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #68D391;
+        }
+    </style>
+</head>
+<body class="p-4 bg-gray-50 h-screen overflow-hidden font-sans text-gray-700 flex flex-col">
+    <!-- Main Container -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex flex-col flex-1 h-full overflow-hidden">
+        
+        <!-- Filter Section -->
+        <div class="flex flex-wrap items-center justify-between mb-3 gap-4 shrink-0">
+            <!-- Left Side: Filters and Action Buttons -->
+            <div class="flex flex-wrap items-center gap-3">
+                <!-- Course Code Input -->
+                <div class="relative">
+                    <input type="text" id="search-input" placeholder="请输入课程码" class="bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-64 text-sm transition-shadow">
+                </div>
+
+                <!-- Action Buttons -->
+                <button onclick="handleSearch()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-5 rounded-lg text-sm transition-all duration-200 shadow-sm hover:shadow">
+                    查询
+                </button>
+                <button onclick="handleReset()" class="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 font-medium py-2 px-5 rounded-lg text-sm transition-all duration-200 shadow-sm hover:shadow">
+                    重置
+                </button>
+            </div>
+
+            <!-- Right Side: Add Button -->
+            <button onclick="openAddModal()" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-5 rounded-lg text-sm transition-all duration-200 shadow-sm hover:shadow flex items-center">
+                <i class="fas fa-plus mr-1"></i> 新增
+            </button>
+        </div>
+
+        <!-- Table Section -->
+        <div class="table-container flex-1 border border-gray-200 rounded-lg relative bg-white overflow-auto">
+            <table class="min-w-max w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50 sticky top-0 shadow-sm z-30">
+                    <tr>
+                        <th scope="col" class="px-3 py-3 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">课程代码</th>
+                        <th scope="col" class="px-3 py-3 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">课程名</th>
+                        <th scope="col" class="px-3 py-3 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">是否允许iClassGPT</th>
+                        <th scope="col" class="px-3 py-3 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">所用模型</th>
+                        <th scope="col" class="px-3 py-3 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">是否允许自动出题</th>
+                        <th scope="col" class="px-3 py-3 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">对应知识库</th>
+                        <th scope="col" class="px-3 py-3 text-center text-xs font-bold text-gray-600 uppercase tracking-wider sticky right-0 bg-gray-50 z-20 shadow-[-5px_0_5px_-5px_rgba(0,0,0,0.1)]">操作</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200 text-sm" id="ai-course-table-body">
+                    <!-- Data will be populated by JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Section -->
+        <div class="flex flex-wrap items-center justify-between pt-3 mt-auto shrink-0" id="pagination-container">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+
+    <!-- New/Edit AI Course Modal -->
+    <div id="add-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 backdrop-blur-sm transition-opacity opacity-0">
+        <div class="bg-white rounded-xl shadow-2xl w-[500px] transform scale-95 transition-transform duration-200" id="add-modal-content">
+            <div class="flex justify-between items-center p-6 border-b border-gray-100">
+                <h3 class="text-xl font-bold text-gray-800" id="modal-title">新增AI课程</h3>
+                <!-- Close button optional -->
+            </div>
+            <div class="p-6 space-y-5">
+                <!-- Course Code -->
+                <div class="flex items-center">
+                    <label class="w-24 text-right text-sm font-bold text-gray-700 mr-4 shrink-0"><span class="text-red-500 mr-1">*</span>课程代码</label>
+                    <input type="text" id="modal-code" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
+                </div>
+                <!-- Course Name -->
+                <div class="flex items-center">
+                    <label class="w-24 text-right text-sm font-bold text-gray-700 mr-4 shrink-0"><span class="text-red-500 mr-1">*</span>课程名称</label>
+                    <input type="text" id="modal-name" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
+                </div>
+                <!-- KB -->
+                <div class="flex items-center">
+                    <label class="w-24 text-right text-sm font-bold text-gray-700 mr-4 shrink-0"><span class="text-red-500 mr-1">*</span>对应知识库</label>
+                    <select id="modal-kb" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm bg-white">
+                        <!-- Options -->
+                    </select>
+                </div>
+                <!-- Model -->
+                <div class="flex items-center">
+                    <label class="w-24 text-right text-sm font-bold text-gray-700 mr-4 shrink-0"><span class="text-red-500 mr-1">*</span>模型</label>
+                    <select id="modal-model" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm bg-white">
+                        <!-- Options -->
+                    </select>
+                </div>
+                <!-- Toggles -->
+                <div class="flex items-center">
+                    <label class="w-24 text-right text-sm font-bold text-gray-700 mr-4 shrink-0">是否允许iClassGPT</label>
+                    <div class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" id="modal-gpt" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-gray-300 transition-all duration-300" checked/>
+                        <label for="modal-gpt" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer transition-colors duration-300"></label>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <label class="w-24 text-right text-sm font-bold text-gray-700 mr-4 shrink-0">是否允许自动出题</label>
+                    <div class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" id="modal-quiz" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-gray-300 transition-all duration-300" checked/>
+                        <label for="modal-quiz" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer transition-colors duration-300"></label>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 border-t border-gray-100 flex justify-end gap-3">
+                <button onclick="closeAddModal()" class="px-6 py-2 text-sm text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors font-medium">取消</button>
+                <button onclick="saveData()" class="px-6 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors font-medium shadow-sm hover:shadow">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 backdrop-blur-sm transition-opacity opacity-0">
+        <div class="bg-white rounded-xl shadow-2xl w-80 transform scale-95 transition-transform duration-200" id="delete-modal-content">
+            <div class="p-6 text-center">
+                <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4 text-red-500">
+                    <i class="fas fa-exclamation-triangle text-xl"></i>
+                </div>
+                <h3 class="text-lg font-bold text-gray-800 mb-2">确认删除</h3>
+                <p class="text-gray-500 text-sm mb-6">您确定要删除该课程吗？此操作无法撤销。</p>
+                <div class="flex justify-center gap-3">
+                    <button onclick="closeDeleteModal()" class="px-4 py-2 text-sm text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors font-medium">取消</button>
+                    <button onclick="confirmDelete()" class="px-4 py-2 text-sm text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors font-medium shadow-sm hover:shadow">删除</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Toast Notification -->
+    <div id="success-toast" class="fixed top-4 right-4 bg-white border border-green-100 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-lg p-4 flex items-center gap-3 transform translate-x-[120%] transition-transform duration-300 z-[100]">
+        <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-500 shrink-0">
+            <i class="fas fa-check"></i>
+        </div>
+        <div>
+            <h4 class="font-bold text-gray-800 text-sm">操作成功</h4>
+            <p class="text-xs text-gray-500 mt-0.5" id="toast-message">操作成功</p>
+        </div>
+    </div>
+
+    <script>
+        // Mock Data Generation
+        const models = ['Deepseek-V3-128b', 'Qwen3-128b', 'Qwen3-64b', 'Deepseek-R1-128b'];
+        const kbs = ['Python语言课程', '计算机硬件综合实验', '模拟电子技术', '科技文献检索与写作', 'UI设计', '广告摄影创作实验', '波谱分析', '飞行程序设计', '大学生创新创业教育', '飞行模拟器实习', '高等数学', '线性代数', '大学物理', '电路分析', '信号与系统'];
+
+        let courses = [
+            { code: '202107', name: 'Python语言课程', allowGPT: true, model: 'Deepseek-V3-128b', allowQuiz: true, kb: 'Python语言课程' },
+            { code: '020184', name: '计算机硬件综合实验', allowGPT: true, model: 'Qwen3-128b', allowQuiz: true, kb: '计算机硬件综合实验' },
+            { code: '204106', name: '模拟电子技术', allowGPT: true, model: 'Qwen3-64b', allowQuiz: true, kb: '模拟电子技术' },
+            { code: '021248', name: '科技文献检索与写作', allowGPT: true, model: 'Deepseek-V3-128b', allowQuiz: true, kb: '科技文献检索与写作' },
+            { code: '071C37', name: 'UI设计', allowGPT: true, model: 'Deepseek-V3-128b', allowQuiz: true, kb: 'UI设计' },
+            { code: '071269', name: '广告摄影创作实验', allowGPT: true, model: 'Deepseek-V3-128b', allowQuiz: true, kb: '广告摄影创作实验' },
+            { code: '040326', name: '波谱分析', allowGPT: true, model: 'Qwen3-128b', allowQuiz: true, kb: '波谱分析' },
+            { code: '072734', name: '飞行程序设计', allowGPT: true, model: 'Qwen3-64b', allowQuiz: true, kb: '飞行程序设计' },
+            { code: '086314', name: '大学生创新创业教育', allowGPT: true, model: 'Deepseek-R1-128b', allowQuiz: true, kb: '大学生创新创业教育' },
+            { code: '041356', name: '飞行模拟器实习', allowGPT: true, model: 'Deepseek-R1-128b', allowQuiz: true, kb: '飞行模拟器实习' },
+        ];
+
+        // Generate mock data to reach ~162 items
+        for (let i = 0; i < 152; i++) {
+            const randomKB = kbs[Math.floor(Math.random() * kbs.length)];
+            courses.push({
+                code: String(Math.floor(Math.random() * 900000) + 100000),
+                name: randomKB, // Simplified for mock
+                allowGPT: Math.random() > 0.3,
+                model: models[Math.floor(Math.random() * models.length)],
+                allowQuiz: Math.random() > 0.3,
+                kb: randomKB
+            });
+        }
+
+        // State
+        let filteredData = [...courses];
+        let currentPage = 1;
+        let pageSize = 10;
+        let isEditMode = false;
+        let currentEditIndex = -1;
+        let deleteIndex = -1;
+
+        // Elements
+        const tbody = document.getElementById('ai-course-table-body');
+        const modal = document.getElementById('add-modal');
+        const modalContent = document.getElementById('add-modal-content');
+        const deleteModal = document.getElementById('delete-modal');
+        const deleteModalContent = document.getElementById('delete-modal-content');
+        const toast = document.getElementById('success-toast');
+        const toastMessage = document.getElementById('toast-message');
+
+        function toggleCourseStatus(index, field) {
+            if (filteredData[index]) {
+                filteredData[index][field] = !filteredData[index][field];
+                showToast('状态更新成功');
+            }
+        }
+
+        // --- Render Logic ---
+        function renderTable() {
+            tbody.innerHTML = '';
+            
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            const pageData = filteredData.slice(start, end);
+
+            pageData.forEach((course, index) => {
+                const realIndex = start + index; // Index in filteredData
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50 transition-colors duration-150 group';
+                tr.innerHTML = `
+                    <td class="px-3 py-3 text-center text-gray-800 font-medium">${course.code}</td>
+                    <td class="px-3 py-3 text-center text-gray-800">${course.name}</td>
+                    <td class="px-3 py-3 text-center">
+                        <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                            <input type="checkbox" id="toggle-gpt-${realIndex}" onchange="toggleCourseStatus(${realIndex}, 'allowGPT')" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer border-gray-300 transition-all duration-300" ${course.allowGPT ? 'checked' : ''}/>
+                            <label for="toggle-gpt-${realIndex}" class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-300 cursor-pointer transition-colors duration-300"></label>
+                        </div>
+                    </td>
+                    <td class="px-3 py-3 text-center text-gray-600">${course.model}</td>
+                    <td class="px-3 py-3 text-center">
+                        <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                            <input type="checkbox" id="toggle-quiz-${realIndex}" onchange="toggleCourseStatus(${realIndex}, 'allowQuiz')" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer border-gray-300 transition-all duration-300" ${course.allowQuiz ? 'checked' : ''}/>
+                            <label for="toggle-quiz-${realIndex}" class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-300 cursor-pointer transition-colors duration-300"></label>
+                        </div>
+                    </td>
+                    <td class="px-3 py-3 text-center text-gray-600">${course.kb}</td>
+                    <td class="px-3 py-3 text-center sticky right-0 bg-white group-hover:bg-gray-50 z-10 shadow-[-5px_0_5px_-5px_rgba(0,0,0,0.1)] transition-colors">
+                        <div class="flex justify-center space-x-3">
+                            <button onclick="openEditModal(${realIndex})" class="w-8 h-8 rounded-lg flex items-center justify-center text-green-500 bg-green-50 border border-green-200 hover:bg-green-100 transition-colors" title="编辑">
+                                <i class="far fa-edit"></i>
+                            </button>
+                            <button onclick="openDeleteConfirm(${realIndex})" class="w-8 h-8 rounded-lg flex items-center justify-center text-red-500 bg-red-50 border border-red-200 hover:bg-red-100 transition-colors" title="删除">
+                                <i class="far fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            renderPagination();
+        }
+
+        function renderPagination() {
+            const totalItems = filteredData.length;
+            const totalPages = Math.ceil(totalItems / pageSize);
+            const container = document.getElementById('pagination-container');
+            
+            let html = `
+                <div class="text-sm text-gray-600 font-medium">
+                    共 ${totalItems} 条
+                </div>
+                <div class="flex items-center space-x-3">
+                    <div class="relative group">
+                        <select onchange="handlePageSizeChange(this.value)" class="appearance-none bg-white border border-gray-300 text-gray-700 py-1.5 pl-3 pr-8 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-shadow">
+                            <option value="10" ${pageSize === 10 ? 'selected' : ''}>10条/页</option>
+                            <option value="20" ${pageSize === 20 ? 'selected' : ''}>20条/页</option>
+                            <option value="50" ${pageSize === 50 ? 'selected' : ''}>50条/页</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400 group-hover:text-blue-500 transition-colors">
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-1">
+                        <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="w-8 h-8 flex items-center justify-center rounded border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-chevron-left text-xs"></i>
+                        </button>
+            `;
+
+            // Simple pagination logic for display
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, currentPage + 2);
+            
+            if (startPage > 1) {
+                html += `<button onclick="changePage(1)" class="w-8 h-8 flex items-center justify-center rounded border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-colors">1</button>`;
+                if (startPage > 2) html += `<span class="w-8 h-8 flex items-center justify-center text-gray-400">...</span>`;
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                if (i === currentPage) {
+                    html += `<button class="w-8 h-8 flex items-center justify-center rounded border border-blue-500 bg-blue-500 text-white font-medium shadow-sm">${i}</button>`;
+                } else {
+                    html += `<button onclick="changePage(${i})" class="w-8 h-8 flex items-center justify-center rounded border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-colors">${i}</button>`;
+                }
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) html += `<span class="w-8 h-8 flex items-center justify-center text-gray-400">...</span>`;
+                html += `<button onclick="changePage(${totalPages})" class="w-8 h-8 flex items-center justify-center rounded border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-colors">${totalPages}</button>`;
+            }
+
+            html += `
+                        <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="w-8 h-8 flex items-center justify-center rounded border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-chevron-right text-xs"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="flex items-center text-sm text-gray-600 ml-2">
+                        <span class="mr-2">跳至</span>
+                        <input type="number" min="1" max="${totalPages}" onchange="changePage(this.value)" class="w-10 h-8 border border-gray-300 rounded text-center focus:outline-none focus:ring-1 focus:ring-blue-500 mx-1 transition-shadow" value="${currentPage}">
+                        <span class="ml-1">页</span>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        function changePage(page) {
+            const totalPages = Math.ceil(filteredData.length / pageSize);
+            page = parseInt(page);
+            if (page < 1 || page > totalPages || page === currentPage) return;
+            currentPage = page;
+            renderTable();
+        }
+
+        function handlePageSizeChange(size) {
+            pageSize = parseInt(size);
+            currentPage = 1;
+            renderTable();
+        }
+
+        // --- Filter Logic ---
+        function handleSearch() {
+            const keyword = document.getElementById('search-input').value.trim();
+            if (keyword) {
+                filteredData = courses.filter(c => c.code.includes(keyword) || c.name.includes(keyword));
+            } else {
+                filteredData = [...courses];
+            }
+            currentPage = 1;
+            renderTable();
+        }
+
+        function handleReset() {
+            document.getElementById('search-input').value = '';
+            filteredData = [...courses];
+            currentPage = 1;
+            renderTable();
+        }
+
+        // --- Modal & CRUD Logic ---
+        function populateDropdowns() {
+            const kbSelect = document.getElementById('modal-kb');
+            const modelSelect = document.getElementById('modal-model');
+            
+            // Use unique KBs from initial data + default list
+            const uniqueKBs = [...new Set([...kbs, ...courses.map(c => c.kb)])];
+
+            kbSelect.innerHTML = '<option value="">请选择知识库</option>';
+            uniqueKBs.forEach(kb => {
+                const opt = document.createElement('option');
+                opt.value = kb;
+                opt.textContent = kb;
+                kbSelect.appendChild(opt);
+            });
+
+            modelSelect.innerHTML = '<option value="">请选择模型</option>';
+            models.forEach(model => {
+                const opt = document.createElement('option');
+                opt.value = model;
+                opt.textContent = model;
+                modelSelect.appendChild(opt);
+            });
+        }
+
+        function openAddModal() {
+            isEditMode = false;
+            currentEditIndex = -1;
+            document.getElementById('modal-title').textContent = '新增AI课程';
+            
+            // Reset fields
+            document.getElementById('modal-code').value = '';
+            document.getElementById('modal-name').value = '';
+            document.getElementById('modal-kb').value = '';
+            document.getElementById('modal-model').value = '';
+            document.getElementById('modal-gpt').checked = true;
+            document.getElementById('modal-quiz').checked = true;
+
+            resetValidation();
+            populateDropdowns();
+            showModal(modal, modalContent);
+        }
+
+        function openEditModal(index) {
+            isEditMode = true;
+            currentEditIndex = index;
+            const item = filteredData[index];
+            
+            document.getElementById('modal-title').textContent = '编辑AI课程';
+            document.getElementById('modal-code').value = item.code;
+            document.getElementById('modal-name').value = item.name;
+            
+            populateDropdowns();
+            document.getElementById('modal-kb').value = item.kb;
+            document.getElementById('modal-model').value = item.model;
+            
+            document.getElementById('modal-gpt').checked = item.allowGPT;
+            document.getElementById('modal-quiz').checked = item.allowQuiz;
+
+            resetValidation();
+            showModal(modal, modalContent);
+        }
+
+        function resetValidation() {
+            ['modal-code', 'modal-name', 'modal-kb', 'modal-model'].forEach(id => {
+                document.getElementById(id).classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+                document.getElementById(id).classList.add('border-gray-300');
+            });
+        }
+
+        function showModal(m, c) {
+            m.classList.remove('hidden');
+            void m.offsetWidth; // Trigger reflow
+            m.classList.remove('opacity-0');
+            c.classList.remove('scale-95');
+        }
+
+        function closeAddModal() {
+            modal.classList.add('opacity-0');
+            modalContent.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+
+        function saveData() {
+            const code = document.getElementById('modal-code');
+            const name = document.getElementById('modal-name');
+            const kb = document.getElementById('modal-kb');
+            const model = document.getElementById('modal-model');
+            const allowGPT = document.getElementById('modal-gpt').checked;
+            const allowQuiz = document.getElementById('modal-quiz').checked;
+
+            let isValid = true;
+            [code, name, kb, model].forEach(input => {
+                if (!input.value.trim()) {
+                    isValid = false;
+                    input.classList.remove('border-gray-300');
+                    input.classList.add('border-red-500', 'ring-2', 'ring-red-200');
+                } else {
+                    input.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+                    input.classList.add('border-gray-300');
+                }
+            });
+
+            if (!isValid) return;
+
+            const newData = {
+                code: code.value.trim(),
+                name: name.value.trim(),
+                allowGPT: allowGPT,
+                model: model.value,
+                allowQuiz: allowQuiz,
+                kb: kb.value
+            };
+
+            if (isEditMode && currentEditIndex !== -1) {
+                // Update existing
+                // Note: currentEditIndex is index in filteredData. Need to find it in original courses array if filtered.
+                // For simplicity in this demo, we update filteredData and sync back to courses if needed.
+                // A robust way is to use ID. Here we use object reference if objects are shared, but filteredData is a shallow copy array.
+                // Let's find the object in 'courses' that matches the one in 'filteredData'
+                const targetObj = filteredData[currentEditIndex];
+                const realIndex = courses.indexOf(targetObj);
+                
+                if (realIndex !== -1) {
+                    courses[realIndex] = newData;
+                    // Also update filteredData to reflect change immediately
+                    filteredData[currentEditIndex] = newData;
+                    showToast('AI课程修改成功');
+                }
+            } else {
+                // Add new
+                courses.unshift(newData);
+                filteredData.unshift(newData);
+                showToast('AI课程新增成功');
+            }
+
+            renderTable();
+            closeAddModal();
+        }
+
+        // --- Delete Logic ---
+        function openDeleteConfirm(index) {
+            deleteIndex = index;
+            showModal(deleteModal, deleteModalContent);
+        }
+
+        function closeDeleteModal() {
+            deleteModal.classList.add('opacity-0');
+            deleteModalContent.classList.add('scale-95');
+            setTimeout(() => {
+                deleteModal.classList.add('hidden');
+            }, 200);
+            deleteIndex = -1;
+        }
+
+        function confirmDelete() {
+            if (deleteIndex === -1) return;
+
+            const targetObj = filteredData[deleteIndex];
+            const realIndex = courses.indexOf(targetObj);
+            
+            if (realIndex !== -1) {
+                courses.splice(realIndex, 1);
+                // Sync filtered data
+                const fIndex = filteredData.indexOf(targetObj);
+                if (fIndex !== -1) filteredData.splice(fIndex, 1);
+            }
+
+            renderTable();
+            closeDeleteModal();
+            showToast('AI课程删除成功');
+        }
+
+        // --- Toast Logic ---
+        function showToast(message) {
+            toastMessage.textContent = message;
+            toast.classList.remove('translate-x-[120%]');
+            setTimeout(() => {
+                toast.classList.add('translate-x-[120%]');
+            }, 3000);
+        }
+
+        // Initialize
+        renderTable();
+    </script>
+</body>
+</html>

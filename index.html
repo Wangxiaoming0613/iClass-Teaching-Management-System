@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iClass 智慧课堂教学管理平台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 h-screen overflow-hidden flex">
+    <!-- 侧边栏 -->
+    <aside class="w-64 bg-white shadow-md flex flex-col transition-all duration-300 z-50" id="sidebar">
+        <div class="h-16 flex items-center justify-center border-b border-gray-200 overflow-hidden px-4" id="sidebar-header">
+            <img src="assets/images/logo.png" alt="iClass Logo" class="w-8 h-8 object-contain logo-img flex-shrink-0">
+            <h1 class="text-xl font-bold text-blue-600 sidebar-title whitespace-nowrap ml-3 truncate">iClass后台管理系统</h1>
+        </div>
+        
+        <nav class="flex-1 overflow-y-auto py-4">
+            <ul class="space-y-1 px-2" id="menu-list">
+                <!-- 菜单项 -->
+                <li>
+                    <a href="javascript:void(0)" onclick="openPage('pages/dashboard.html', '首页')" data-path="pages/dashboard.html" class="nav-item flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors group">
+                        <i class="fas fa-tachometer-alt w-6 text-center mr-2 text-gray-400 group-hover:text-blue-600 nav-icon"></i>
+                        <span class="nav-text whitespace-nowrap">首页</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="javascript:void(0)" onclick="openPage('pages/data-display.html', '数据展示')" data-path="pages/data-display.html" class="nav-item flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors group">
+                        <i class="fas fa-chart-line w-6 text-center mr-2 text-gray-400 group-hover:text-blue-600 nav-icon"></i>
+                        <span class="nav-text whitespace-nowrap">数据展示</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="javascript:void(0)" onclick="openPage('pages/organization-management.html', '组织管理')" data-path="pages/organization-management.html" class="nav-item flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors group">
+                        <i class="fas fa-sitemap w-6 text-center mr-2 text-gray-400 group-hover:text-blue-600 nav-icon"></i>
+                        <span class="nav-text whitespace-nowrap">组织管理</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="javascript:void(0)" onclick="openPage('pages/course-management.html', '课程管理')" data-path="pages/course-management.html" class="nav-item flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors group">
+                        <i class="fas fa-book w-6 text-center mr-2 text-gray-400 group-hover:text-blue-600 nav-icon"></i>
+                        <span class="nav-text whitespace-nowrap">课程管理</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="javascript:void(0)" onclick="openPage('pages/schedule.html', '排课管理')" data-path="pages/schedule.html" class="nav-item flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors group">
+                        <i class="fas fa-calendar-alt w-6 text-center mr-2 text-gray-400 group-hover:text-blue-600 nav-icon"></i>
+                        <span class="nav-text whitespace-nowrap">排课管理</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="javascript:void(0)" onclick="openPage('pages/semester.html', '学期管理')" data-path="pages/semester.html" class="nav-item flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors group">
+                        <i class="fas fa-clock w-6 text-center mr-2 text-gray-400 group-hover:text-blue-600 nav-icon"></i>
+                        <span class="nav-text whitespace-nowrap">学期管理</span>
+                    </a>
+                </li>
+                <!-- 用户管理 (二级菜单) -->
+                <li class="relative">
+                    <button class="nav-item w-full flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors group" onclick="toggleSubmenu('user-submenu')">
+                        <div class="flex items-center">
+                            <i class="fas fa-users w-6 text-center mr-2 text-gray-400 group-hover:text-blue-600 nav-icon"></i>
+                            <span class="nav-text whitespace-nowrap">用户管理</span>
+                        </div>
+                        <i class="fas fa-chevron-down text-xs transition-transform duration-200 submenu-arrow" id="user-submenu-arrow"></i>
+                    </button>
+                    <ul id="user-submenu" class="submenu hidden pl-10 space-y-1 mt-1">
+                        <li>
+                            <a href="javascript:void(0)" onclick="openPage('pages/user/teacher.html', '教师管理')" data-path="pages/user/teacher.html" class="block px-4 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md">教师管理</a>
+                        </li>
+                        <li>
+                            <a href="javascript:void(0)" onclick="openPage('pages/user/student.html', '学生管理')" data-path="pages/user/student.html" class="block px-4 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md">学生管理</a>
+                        </li>
+                    </ul>
+                </li>
+                <!-- AI管理 (二级菜单) -->
+                <li class="relative">
+                    <button class="nav-item w-full flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors group" onclick="toggleSubmenu('ai-submenu')">
+                        <div class="flex items-center">
+                            <i class="fas fa-robot w-6 text-center mr-2 text-gray-400 group-hover:text-blue-600 nav-icon"></i>
+                            <span class="nav-text whitespace-nowrap">AI管理</span>
+                        </div>
+                        <i class="fas fa-chevron-down text-xs transition-transform duration-200 submenu-arrow" id="ai-submenu-arrow"></i>
+                    </button>
+                    <ul id="ai-submenu" class="submenu hidden pl-10 space-y-1 mt-1">
+                        <li>
+                            <a href="javascript:void(0)" onclick="openPage('pages/ai/course.html', 'AI课程')" data-path="pages/ai/course.html" class="block px-4 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md">AI课程</a>
+                        </li>
+                        <li>
+                            <a href="javascript:void(0)" onclick="openPage('pages/ai/knowledge.html', '知识库管理')" data-path="pages/ai/knowledge.html" class="block px-4 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md">知识库管理</a>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="javascript:void(0)" onclick="openPage('pages/system.html', '系统管理')" data-path="pages/system.html" class="nav-item flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors group">
+                        <i class="fas fa-cogs w-6 text-center mr-2 text-gray-400 group-hover:text-blue-600 nav-icon"></i>
+                        <span class="nav-text whitespace-nowrap">系统管理</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+        <!-- 顶部导航 -->
+        <header class="h-14 bg-white shadow-sm flex items-center justify-between px-6 z-20 relative border-b border-gray-100">
+            <div class="flex items-center">
+                <button id="toggle-sidebar" class="text-gray-500 hover:text-blue-600 focus:outline-none mr-4">
+                    <i class="fas fa-bars text-lg"></i>
+                </button>
+                <div class="text-gray-500 text-sm flex items-center" id="breadcrumb-container">
+                    <span>教学管理平台</span>
+                    <i class="fas fa-chevron-right text-xs mx-2 text-gray-400"></i>
+                    <span class="text-gray-800 font-medium">首页</span>
+                </div>
+            </div>
+            <div class="flex items-center space-x-5">
+                <button id="fullscreen-btn" class="text-gray-400 hover:text-blue-600 focus:outline-none" title="全屏">
+                    <i class="fas fa-expand text-lg"></i>
+                </button>
+                <div class="relative cursor-pointer flex items-center space-x-2 group">
+                    <img src="https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff" alt="User" class="w-8 h-8 rounded-full border-2 border-white shadow-sm">
+                    <i class="fas fa-caret-down text-gray-400 text-xs"></i>
+                    <!-- 下拉菜单 -->
+                    <div class="absolute top-full right-0 mt-2 w-32 bg-white rounded-md shadow-lg border border-gray-100 hidden group-hover:block py-1 z-50">
+                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50">个人中心</a>
+                        <a href="login.html" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">退出登录</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 页面标签切换区域 (Tags View) -->
+        <div class="h-10 bg-white border-b border-gray-200 flex items-center px-4 space-x-2 overflow-x-auto shadow-sm z-10" id="tags-view-container">
+            <!-- 标签将由 JS 动态生成 -->
+        </div>
+
+        <!-- iframe 内容容器 -->
+        <div class="flex-1 bg-gray-50 p-4 overflow-hidden relative" id="iframe-container">
+            <!-- iframe 将由 JS 动态生成 -->
+        </div>
+    </main>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据展示</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom scrollbar */
+        .table-container::-webkit-scrollbar {
+            height: 10px;
+            width: 10px;
+        }
+        .table-container::-webkit-scrollbar-track {
+            background: #f8fafc;
+            border-radius: 4px;
+        }
+        .table-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 5px;
+            border: 2px solid #f8fafc;
+        }
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        /* Sticky Columns Configuration */
+        .fixed-col {
+            position: sticky;
+            z-index: 10;
+        }
+        
+        /* Specific Z-indices */
+        thead .fixed-col {
+            z-index: 30; /* Higher than body fixed cols */
+        }
+        
+        /* Column Widths and Positions - Compact layout */
+        /* Column 1: Index */
+        .col-1 {
+            left: 0;
+            width: 50px;
+            min-width: 50px;
+        }
+        
+        /* Column 2: College */
+        .col-2 {
+            left: 50px;
+            width: 140px;
+            min-width: 140px;
+            max-width: 140px;
+        }
+        
+        /* Column 3: Course Name */
+        .col-3 {
+            left: 190px;
+            width: 160px;
+            min-width: 160px;
+            max-width: 160px;
+        }
+        
+        /* Column 4: Teacher Name */
+        .col-4 {
+            left: 350px;
+            width: 90px;
+            min-width: 90px;
+            max-width: 90px;
+            /* Transition for border color */
+            transition: border-right-color 0.2s;
+            border-right: 1px solid transparent; /* Hidden by default */
+        }
+        
+        /* Background Colors for Sticky Effect */
+        thead .fixed-col {
+            background-color: #f9fafb; /* gray-50 */
+        }
+        
+        tbody .fixed-col {
+            background-color: #ffffff;
+            transition: background-color 0.2s;
+        }
+        
+        /* Hover effect propagation */
+        tbody tr:hover .fixed-col {
+            background-color: #f9fafb; /* gray-50 equivalent for hover */
+        }
+        
+        /* Visual Separation (Shadow) for the last fixed column - Controlled by JS class */
+        .col-4::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 10px;
+            pointer-events: none;
+            box-shadow: inset -5px 0 5px -5px rgba(0,0,0,0.15);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        /* Active state classes applied when scrolling */
+        .is-scrolling .col-4 {
+            box-shadow: 4px 0 8px -4px rgba(0, 0, 0, 0.1);
+            border-right: 1px solid #e5e7eb;
+        }
+        
+        .is-scrolling .col-4::after {
+            opacity: 1;
+        }
+
+        /* Prevent vertical scroll on the table container, allow horizontal */
+        .table-container {
+            overflow: auto;
+        }
+    .text-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            height: 40px;
+            line-height: 20px;
+            white-space: normal;
+        }
+    </style>
+</head>
+<body class="p-4 bg-gray-50 h-screen overflow-hidden font-sans text-gray-700 flex flex-col">
+    <!-- Main Container -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex flex-col flex-1 h-full overflow-hidden">
+        
+        <!-- Filter Section -->
+        <div class="flex flex-wrap items-center justify-between mb-3 gap-4 shrink-0">
+            <div class="flex flex-wrap items-center gap-3 flex-1">
+                <!-- Academic Year -->
+                <div class="custom-select relative w-40" id="filter-year-container">
+                    <button class="select-trigger w-full bg-white border border-gray-300 text-gray-700 py-2 pl-4 pr-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-left flex items-center justify-between transition-shadow group">
+                        <span class="selected-text truncate">全部学年</span>
+                        <i class="fas fa-chevron-down text-xs text-gray-400 group-hover:text-blue-500 transition-colors"></i>
+                    </button>
+                    <div class="options-list absolute top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 hidden max-h-60 overflow-y-auto">
+                        <div class="option-item px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors" data-value="">全部学年</div>
+                        <div class="option-item px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors" data-value="2024-2025">2024-2025</div>
+                        <div class="option-item px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors" data-value="2023-2024">2023-2024</div>
+                        <div class="option-item px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors" data-value="2022-2023">2022-2023</div>
+                    </div>
+                    <input type="hidden" id="filter-year" value="">
+                </div>
+
+                <!-- Semester -->
+                <div class="custom-select relative w-40" id="filter-semester-container">
+                    <button class="select-trigger w-full bg-white border border-gray-300 text-gray-700 py-2 pl-4 pr-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-left flex items-center justify-between transition-shadow group">
+                        <span class="selected-text truncate">全部学期</span>
+                        <i class="fas fa-chevron-down text-xs text-gray-400 group-hover:text-blue-500 transition-colors"></i>
+                    </button>
+                    <div class="options-list absolute top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 hidden max-h-60 overflow-y-auto">
+                        <div class="option-item px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors" data-value="">全部学期</div>
+                        <div class="option-item px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors" data-value="春季学期">春季学期</div>
+                        <div class="option-item px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors" data-value="秋季学期">秋季学期</div>
+                    </div>
+                    <input type="hidden" id="filter-semester" value="">
+                </div>
+
+                <!-- College -->
+                <div class="custom-select relative w-44" id="filter-college-container">
+                    <button class="select-trigger w-full bg-white border border-gray-300 text-gray-700 py-2 pl-4 pr-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-left flex items-center justify-between transition-shadow group">
+                        <span class="selected-text truncate">全部学院</span>
+                        <i class="fas fa-chevron-down text-xs text-gray-400 group-hover:text-blue-500 transition-colors"></i>
+                    </button>
+                    <div class="options-list absolute top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 hidden max-h-60 overflow-y-auto">
+                        <div class="option-item px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors" data-value="">全部学院</div>
+                        <div class="option-item px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors" data-value="电子电气工程学院">电子电气工程学院</div>
+                        <div class="option-item px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors" data-value="马克思主义学院">马克思主义学院</div>
+                        <div class="option-item px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors" data-value="工商管理学院">工商管理学院</div>
+                        <div class="option-item px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors" data-value="外国语学院">外国语学院</div>
+                        <div class="option-item px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors" data-value="化学化工学院">化学化工学院</div>
+                        <div class="option-item px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors" data-value="艺术设计学院">艺术设计学院</div>
+                        <div class="option-item px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors" data-value="城市轨道交通学院">城市轨道交通学院</div>
+                    </div>
+                    <input type="hidden" id="filter-college" value="">
+                </div>
+
+                <!-- Teacher/Course Name Input -->
+                <div class="relative">
+                    <input id="search-teacher" type="text" placeholder="请输入课程名或教师姓名" class="bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-56 text-sm transition-shadow">
+                </div>
+
+                <!-- Action Buttons -->
+                <button id="btn-search" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-5 rounded-lg text-sm transition-all duration-200 shadow-sm hover:shadow">
+                    查询
+                </button>
+                <button id="btn-reset" class="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 font-medium py-2 px-5 rounded-lg text-sm transition-all duration-200 shadow-sm hover:shadow">
+                    重置
+                </button>
+            </div>
+
+            <!-- Export Button -->
+            <div>
+                <button class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 flex items-center shadow-sm hover:shadow">
+                    <span class="mr-1">导出表格数据</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Table Section -->
+        <div class="table-container flex-1 border border-gray-200 rounded-lg relative bg-white">
+            <table class="min-w-max w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50 sticky top-0 shadow-sm z-30">
+                    <tr>
+                        <th scope="col" class="fixed-col col-1 px-3 py-3 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">序号</th>
+                        <th scope="col" class="fixed-col col-2 px-3 py-3 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">学院</th>
+                        <th scope="col" class="fixed-col col-3 px-3 py-3 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">课程名</th>
+                        <th scope="col" class="fixed-col col-4 px-3 py-3 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">教师名</th>
+                        <th scope="col" class="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">学生人数</th>
+                        <th scope="col" class="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">iclass使用节数</th>
+                        <th scope="col" class="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">课程签到率</th>
+                        <th scope="col" class="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">课堂互动数</th>
+                        <th scope="col" class="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">发布问题数</th>
+                        <th scope="col" class="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">随机点名数</th>
+                        <th scope="col" class="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">发布抢答</th>
+                        <th scope="col" class="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">发布作业</th>
+                        <th scope="col" class="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">上传资源数</th>
+                        <th scope="col" class="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">添加问题数</th>
+                        <th scope="col" class="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">添加解析率</th>
+                        <th scope="col" class="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">留言数</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body" class="bg-white divide-y divide-gray-200 text-sm">
+                    <!-- Rows will be generated by JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Section -->
+        <div class="flex flex-wrap items-center justify-between pt-3 mt-auto shrink-0">
+            <div id="total-count" class="text-sm text-gray-600 font-medium">
+                共 0 条
+            </div>
+            <div class="flex items-center space-x-3">
+                <div class="relative group">
+                    <select id="rows-per-page" class="appearance-none bg-white border border-gray-300 text-gray-700 py-1.5 pl-3 pr-8 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-shadow">
+                        <option value="10">10条/页</option>
+                        <option value="20">20条/页</option>
+                        <option value="50">50条/页</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400 group-hover:text-blue-500 transition-colors">
+                        <i class="fas fa-chevron-down text-xs"></i>
+                    </div>
+                </div>
+
+                <div id="pagination-container" class="flex items-center space-x-1">
+                    <!-- Pagination buttons will be generated by JS -->
+                </div>
+                
+                <div class="flex items-center text-sm text-gray-600 ml-2">
+                    <span class="mr-2">跳至</span>
+                    <input id="jump-page" type="number" min="1" class="w-10 h-8 border border-gray-300 rounded text-center focus:outline-none focus:ring-1 focus:ring-blue-500 mx-1 transition-shadow">
+                    <span class="ml-1">页</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Sticky Column Logic ---
+            const tableContainer = document.querySelector('.table-container');
+            const checkScroll = () => {
+                if (tableContainer.scrollLeft > 0) {
+                    tableContainer.classList.add('is-scrolling');
+                } else {
+                    tableContainer.classList.remove('is-scrolling');
+                }
+            };
+            tableContainer.addEventListener('scroll', checkScroll);
+            checkScroll();
+
+            // --- Mock Data ---
+            const colleges = ['电子电气工程学院', '马克思主义学院', '工商管理学院', '外国语学院', '化学化工学院', '艺术设计学院', '城市轨道交通学院'];
+            const courses = ['新能源与可持续发展', '马克思列宁主义', '工商管理体系', '跨文化商务交际', '无机化学', '艺术设计概论', '数字与信号基础', '高等数学', '大学英语', '计算机基础'];
+            const teachers = ['刘希奇', '张三丰', '王小明', '元艳红', '李三散', '张菁', '杜青', '李四', '王五', '赵六'];
+            const semesters = ['春季学期', '秋季学期'];
+            const years = ['2024-2025', '2023-2024', '2022-2023'];
+
+            const generateMockData = (count) => {
+                const data = [];
+                for (let i = 1; i <= count; i++) {
+                    data.push({
+                        id: i,
+                        college: colleges[Math.floor(Math.random() * colleges.length)],
+                        course: courses[Math.floor(Math.random() * courses.length)],
+                        teacher: teachers[Math.floor(Math.random() * teachers.length)],
+                        year: years[Math.floor(Math.random() * years.length)],
+                        semester: semesters[Math.floor(Math.random() * semesters.length)],
+                        students: Math.floor(Math.random() * 50) + 20,
+                        iclassHours: Math.floor(Math.random() * 20),
+                        attendance: Math.floor(Math.random() * 40) + 60 + '%',
+                        interaction: Math.floor(Math.random() * 30),
+                        questions: Math.floor(Math.random() * 15),
+                        randomCall: Math.floor(Math.random() * 10),
+                        quickAnswer: Math.floor(Math.random() * 10),
+                        homework: Math.floor(Math.random() * 20),
+                        resources: Math.floor(Math.random() * 10),
+                        addedQuestions: Math.floor(Math.random() * 20),
+                        analysisRate: Math.floor(Math.random() * 50) + 50 + '%',
+                        comments: Math.floor(Math.random() * 30)
+                    });
+                }
+                return data;
+            };
+
+            let allData = generateMockData(162); // Generate 162 rows as per original UI
+            let filteredData = [...allData];
+            let currentPage = 1;
+            let rowsPerPage = 10;
+
+            // --- Elements ---
+            const tableBody = document.getElementById('table-body');
+            const totalCountEl = document.getElementById('total-count');
+            const rowsPerPageSelect = document.getElementById('rows-per-page');
+            const paginationContainer = document.getElementById('pagination-container');
+            const jumpInput = document.getElementById('jump-page');
+            
+            const filterYear = document.getElementById('filter-year');
+            const filterSemester = document.getElementById('filter-semester');
+            const filterCollege = document.getElementById('filter-college');
+            const searchTeacher = document.getElementById('search-teacher');
+            const btnSearch = document.getElementById('btn-search');
+            const btnReset = document.getElementById('btn-reset');
+
+            // --- Custom Select Logic ---
+            const setupCustomSelects = () => {
+                const selects = document.querySelectorAll('.custom-select');
+                
+                // Close all selects when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.custom-select')) {
+                        document.querySelectorAll('.options-list').forEach(list => {
+                            list.classList.add('hidden');
+                        });
+                    }
+                });
+
+                selects.forEach(select => {
+                    const trigger = select.querySelector('.select-trigger');
+                    const list = select.querySelector('.options-list');
+                    const hiddenInput = select.querySelector('input[type="hidden"]');
+                    const selectedText = select.querySelector('.selected-text');
+                    const options = select.querySelectorAll('.option-item');
+
+                    // Toggle list
+                    trigger.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        // Close other lists first
+                        document.querySelectorAll('.options-list').forEach(l => {
+                            if (l !== list) l.classList.add('hidden');
+                        });
+                        list.classList.toggle('hidden');
+                    });
+
+                    // Select option
+                    options.forEach(option => {
+                        option.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            const value = option.dataset.value;
+                            const text = option.textContent;
+                            
+                            hiddenInput.value = value;
+                            selectedText.textContent = text;
+                            
+                            // Highlight selected
+                            options.forEach(o => o.classList.remove('bg-blue-50', 'text-blue-600'));
+                            option.classList.add('bg-blue-50', 'text-blue-600');
+                            
+                            list.classList.add('hidden');
+                        });
+                    });
+                });
+            };
+            
+            setupCustomSelects();
+
+            // --- Rendering ---
+            const renderTable = () => {
+                tableBody.innerHTML = '';
+                const start = (currentPage - 1) * rowsPerPage;
+                const end = start + rowsPerPage;
+                const pageData = filteredData.slice(start, end);
+
+                if (pageData.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="16" class="text-center py-4 text-gray-500">暂无数据</td></tr>';
+                    return;
+                }
+
+                pageData.forEach((row, index) => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-gray-50 transition-colors duration-150';
+                    tr.innerHTML = `
+                        <td class="fixed-col col-1 px-3 py-3 text-center text-gray-500">${start + index + 1}</td>
+                        <td class="fixed-col col-2 px-3 py-3 text-center font-medium text-gray-800"><div class="text-clamp-2">${row.college}</div></td>
+                        <td class="fixed-col col-3 px-3 py-3 text-center text-gray-800"><div class="text-clamp-2">${row.course}</div></td>
+                        <td class="fixed-col col-4 px-3 py-3 text-center text-gray-800"><div class="text-clamp-2">${row.teacher}</div></td>
+                        <td class="px-4 py-3 text-center text-gray-600">${row.students}</td>
+                        <td class="px-4 py-3 text-center text-gray-600">${row.iclassHours}</td>
+                        <td class="px-4 py-3 text-center text-gray-600">${row.attendance}</td>
+                        <td class="px-4 py-3 text-center text-gray-600">${row.interaction}</td>
+                        <td class="px-4 py-3 text-center text-gray-600">${row.questions}</td>
+                        <td class="px-4 py-3 text-center text-gray-600">${row.randomCall}</td>
+                        <td class="px-4 py-3 text-center text-gray-600">${row.quickAnswer}</td>
+                        <td class="px-4 py-3 text-center text-gray-600">${row.homework}</td>
+                        <td class="px-4 py-3 text-center text-gray-600">${row.resources}</td>
+                        <td class="px-4 py-3 text-center text-gray-600">${row.addedQuestions}</td>
+                        <td class="px-4 py-3 text-center text-gray-600">${row.analysisRate}</td>
+                        <td class="px-4 py-3 text-center text-gray-600">${row.comments}</td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+            };
+
+            const renderPagination = () => {
+                const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+                totalCountEl.textContent = `共 ${filteredData.length} 条`;
+                paginationContainer.innerHTML = '';
+
+                // Prev Button
+                const prevBtn = createPageButton('<i class="fas fa-chevron-left text-xs"></i>', currentPage > 1, () => {
+                    if (currentPage > 1) {
+                        currentPage--;
+                        updateView();
+                    }
+                });
+                paginationContainer.appendChild(prevBtn);
+
+                // Page Numbers
+                let startPage = Math.max(1, currentPage - 2);
+                let endPage = Math.min(totalPages, startPage + 4);
+                
+                if (endPage - startPage < 4) {
+                    startPage = Math.max(1, endPage - 4);
+                }
+
+                if (startPage > 1) {
+                    paginationContainer.appendChild(createPageButton('1', true, () => { currentPage = 1; updateView(); }, currentPage === 1));
+                    if (startPage > 2) {
+                        const dots = document.createElement('span');
+                        dots.className = 'w-8 h-8 flex items-center justify-center text-gray-400';
+                        dots.textContent = '...';
+                        paginationContainer.appendChild(dots);
+                    }
+                }
+
+                for (let i = startPage; i <= endPage; i++) {
+                    paginationContainer.appendChild(createPageButton(i, true, () => { currentPage = i; updateView(); }, currentPage === i));
+                }
+
+                if (endPage < totalPages) {
+                    if (endPage < totalPages - 1) {
+                        const dots = document.createElement('span');
+                        dots.className = 'w-8 h-8 flex items-center justify-center text-gray-400';
+                        dots.textContent = '...';
+                        paginationContainer.appendChild(dots);
+                    }
+                    paginationContainer.appendChild(createPageButton(totalPages, true, () => { currentPage = totalPages; updateView(); }, currentPage === totalPages));
+                }
+
+                // Next Button
+                const nextBtn = createPageButton('<i class="fas fa-chevron-right text-xs"></i>', currentPage < totalPages, () => {
+                    if (currentPage < totalPages) {
+                        currentPage++;
+                        updateView();
+                    }
+                });
+                paginationContainer.appendChild(nextBtn);
+            };
+
+            const createPageButton = (content, enabled, onClick, isActive = false) => {
+                const btn = document.createElement('button');
+                btn.className = `w-8 h-8 flex items-center justify-center rounded border transition-colors ${
+                    isActive 
+                    ? 'border-blue-500 bg-blue-500 text-white font-medium shadow-sm' 
+                    : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:text-blue-600'
+                }`;
+                if (!enabled && !isActive) {
+                   btn.classList.add('opacity-50', 'cursor-not-allowed');
+                   // For simple text buttons, we might still want them clickable if they are page numbers, 
+                   // but for prev/next when disabled, we should prevent click.
+                   // However, for page numbers, 'enabled' is true. 
+                   // Logic: if it's prev/next and disabled, don't add onclick or return early.
+                }
+                
+                if (enabled || isActive) {
+                    btn.onclick = onClick;
+                }
+                
+                btn.innerHTML = content;
+                return btn;
+            };
+
+            const updateView = () => {
+                renderTable();
+                renderPagination();
+                checkScroll();
+            };
+
+            // --- Filtering ---
+            const filterData = () => {
+                const year = filterYear.value;
+                const semester = filterSemester.value;
+                const college = filterCollege.value;
+                const searchText = searchTeacher.value.trim().toLowerCase();
+
+                filteredData = allData.filter(item => {
+                    const matchYear = !year || item.year === year;
+                    const matchSemester = !semester || item.semester === semester;
+                    const matchCollege = !college || item.college === college;
+                    const matchSearch = !searchText || 
+                                      item.teacher.toLowerCase().includes(searchText) || 
+                                      item.course.toLowerCase().includes(searchText);
+                    return matchYear && matchSemester && matchCollege && matchSearch;
+                });
+
+                currentPage = 1; // Reset to first page
+                updateView();
+            };
+
+            // --- Event Listeners ---
+            btnSearch.addEventListener('click', filterData);
+            
+            btnReset.addEventListener('click', () => {
+                // Reset hidden inputs
+                filterYear.value = '';
+                filterSemester.value = '';
+                filterCollege.value = '';
+                searchTeacher.value = '';
+                
+                // Reset UI texts
+                document.querySelector('#filter-year-container .selected-text').textContent = '全部学年';
+                document.querySelector('#filter-semester-container .selected-text').textContent = '全部学期';
+                document.querySelector('#filter-college-container .selected-text').textContent = '全部学院';
+                
+                // Reset highlights
+                document.querySelectorAll('.option-item').forEach(o => o.classList.remove('bg-blue-50', 'text-blue-600'));
+                
+                filterData();
+            });
+
+            rowsPerPageSelect.addEventListener('change', (e) => {
+                rowsPerPage = parseInt(e.target.value);
+                currentPage = 1;
+                updateView();
+            });
+
+            jumpInput.addEventListener('change', (e) => {
+                const page = parseInt(e.target.value);
+                const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+                if (page >= 1 && page <= totalPages) {
+                    currentPage = page;
+                    updateView();
+                } else {
+                    e.target.value = '';
+                }
+            });
+
+            // Initial Load
+            updateView();
+        });
+    </script>
+</body>
+</html>

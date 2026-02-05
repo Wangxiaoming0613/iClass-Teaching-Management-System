@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>知识点解析 - iClass智慧课堂</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f8fafc;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Toggle Switch */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #68D391;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #68D391;
+        }
+        
+        .list-container {
+            height: calc(100vh - 180px); /* Adjust based on header height */
+        }
+    </style>
+</head>
+<body class="bg-gray-50 h-screen flex flex-col font-sans text-gray-700 overflow-hidden">
+
+    <!-- Header / Breadcrumb -->
+    <div class="bg-white shadow-sm border-b border-gray-200 px-6 pt-4 pb-4 shrink-0 z-20">
+        <!-- Breadcrumb -->
+        <div class="flex items-center gap-2 text-sm text-gray-500 mb-4">
+            <a href="javascript:history.back()" class="hover:text-blue-600 transition-colors flex items-center gap-1">
+                <i class="fas fa-arrow-left"></i> 返回知识点列表
+            </a>
+            <span class="text-gray-300">|</span>
+            <span class="font-bold text-gray-800 text-base" id="kb-title">数字电视系统</span>
+        </div>
+
+        <!-- Title & Toolbar -->
+        <div class="flex items-center justify-between">
+            <h1 class="text-xl font-bold text-gray-800 truncate max-w-2xl" id="file-title">8K超高清公共显示传播系统技术规范范围规范性引用文件.pdf</h1>
+            
+            <div class="flex items-center gap-3">
+                <!-- Filter Dropdown -->
+                <div class="relative">
+                    <button id="filter-btn" onclick="toggleFilterDropdown()" class="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-all shadow-sm">
+                        <i class="fas fa-filter"></i>
+                    </button>
+                    <div id="filter-dropdown" class="hidden absolute right-0 top-full mt-2 w-32 bg-white border border-gray-100 rounded-lg shadow-lg z-50 py-1 origin-top-right transition-all duration-200 opacity-0 scale-95">
+                        <div onclick="setFilter('all')" class="px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer flex justify-between items-center">
+                            <span>全部</span>
+                            <i class="fas fa-check text-blue-600 opacity-100" id="check-all"></i>
+                        </div>
+                        <div onclick="setFilter('enabled')" class="px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer flex justify-between items-center">
+                            <span>已启用</span>
+                            <i class="fas fa-check text-blue-600 opacity-0" id="check-enabled"></i>
+                        </div>
+                        <div onclick="setFilter('disabled')" class="px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer flex justify-between items-center">
+                            <span>未启用</span>
+                            <i class="fas fa-check text-blue-600 opacity-0" id="check-disabled"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <input type="text" id="search-input" oninput="handleSearch(this.value)" placeholder="搜索关键词" class="bg-white border border-gray-300 text-gray-700 py-1.5 pl-9 pr-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-64 text-sm">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                </div>
+                <button onclick="handleAdd()" class="w-9 h-9 flex items-center justify-center rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-all shadow-sm">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 p-4 overflow-hidden flex gap-4">
+        
+        <!-- Left Column: Parsing Blocks List -->
+        <div class="w-2/3 flex flex-col h-full">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 flex-1 flex flex-col overflow-hidden">
+                <!-- List Content -->
+                <div class="flex-1 overflow-y-auto p-4 space-y-4" id="chunk-list">
+                    <!-- Chunks will be rendered here -->
+                </div>
+
+                <!-- Footer / Pagination -->
+                <div class="border-t border-gray-200 px-4 py-3 bg-gray-50 flex items-center justify-between shrink-0">
+                    <div class="flex items-center gap-4">
+                        <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                            <input type="checkbox" id="select-all" onchange="toggleSelectAll(this.checked)" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4">
+                            全选
+                        </label>
+                        <button onclick="handleBatchDelete()" class="text-gray-600 hover:text-red-600 text-sm font-medium transition-colors">
+                            批量删除
+                        </button>
+                        <div class="text-sm text-gray-600 font-medium ml-4" id="total-count">
+                            共 0 条
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-1" id="pagination-controls">
+                        <!-- Pagination rendered by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Document Preview -->
+        <div class="w-1/3 h-full bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col overflow-hidden">
+            <div class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                <h3 class="font-bold text-gray-700">开发研究与设计技术</h3>
+                <span class="text-xs text-gray-400">Page 1/12</span>
+            </div>
+            <div class="flex-1 overflow-auto bg-gray-100 p-4 flex justify-center">
+                <!-- Placeholder for PDF/Image -->
+                <div class="bg-white shadow-lg w-full max-w-[90%] min-h-[800px] p-8 text-xs leading-relaxed text-gray-800 relative">
+                     <!-- Mock Content simulating a document page -->
+                     <h2 class="text-center text-lg font-bold mb-4">数字电视系统综述</h2>
+                     <p class="text-center text-gray-500 mb-6">张三 (南京理工大学 计算机科学与工程学院, 江苏 南京 210094)</p>
+                     
+                     <div class="columns-2 gap-4 text-justify">
+                        <p class="mb-2"><strong>摘要：</strong>本文简述了数字电视技术的发展历程，分析了数字电视系统的关键技术，包括信源编码、信道编码、调制技术等。...</p>
+                        <p class="mb-2"><strong>关键词：</strong>数字电视；DTV；嵌入式开发</p>
+                        <h4 class="font-bold mt-4 mb-2">1. 引言</h4>
+                        <p class="mb-2">数字电视是当今世界各国关注的技术热点。中国在数字电视产业化发展方面也取得了长足进步。数字电视不仅是技术的升级，更是信息产业的一次革命...</p>
+                        <h4 class="font-bold mt-4 mb-2">2. 数字电视系统发展的必然趋势</h4>
+                        <p class="mb-2">数字电视系统的高清晰度、高音质、多功能服务是其发展的根本动力。相比模拟电视，数字电视在频谱利用率、抗干扰能力、易于存储和处理等方面具有显著优势...</p>
+                        <h4 class="font-bold mt-4 mb-2">3. 数字电视关键技术</h4>
+                        <p class="mb-2">数字电视系统的关键技术主要包括以下几点：</p>
+                        <p class="mb-2"><strong>(1) 信源编码技术：</strong> 视频压缩是数字电视的核心，MPEG-2、H.264/AVC、H.265/HEVC等标准被广泛应用...</p>
+                        <p class="mb-2"><strong>(2) 信道编码技术：</strong> 为了保证信号在传输过程中的可靠性，采用了RS编码、卷积编码、LDPC编码等纠错技术...</p>
+                     </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-4 right-4 bg-white border border-green-100 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-lg p-4 flex items-center gap-3 transform translate-x-[120%] transition-transform duration-300 z-[100]">
+        <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-500 shrink-0" id="toast-icon">
+            <i class="fas fa-check"></i>
+        </div>
+        <div>
+            <h4 class="font-bold text-gray-800 text-sm" id="toast-title">操作成功</h4>
+            <p class="text-xs text-gray-500 mt-0.5" id="toast-msg">操作已完成</p>
+        </div>
+    </div>
+
+    <script>
+        // --- State ---
+        let chunks = [];
+        let currentPage = 1;
+        let pageSize = 10;
+        let selectedIds = new Set();
+        let searchKeyword = '';
+        let currentFilterStatus = 'all'; // all, enabled, disabled
+
+        // --- Mock Data ---
+        function generateChunks() {
+            const contents = [
+                '本文件适用于8K超高清公共显示传播系统的规划、设计、建设和运营维护。',
+                '下列文件中的内容通过文中的规范性引用而构成本文件必不可少的条款。其中，注日期的引用文件，仅该日期对应的版本适用于本文件；不注日期的引用文件，其最新版本（包括所有的修改单）适用于本文件。',
+                '超高清昕度电视系统节目制作和交换参数值 GY/T 313-2017 高清昕度电视节目录制规范 GY/T 340-2020 超高清昕度电视图像质量主观评价方法 双刺激连续质量标准度法 GY/T 358-2022 高动态范围电视系统显示适配元数据技术要求（本文件称：HDR Vivid） GY/T 363-2023',
+                '术语和定义 下列术语和定义适用于本文件。',
+                '8K超高清 8K Ultra High Definition (8K UHD) 图像分辨率为7680×4320像素的视频格式。',
+                '公共显示 Public Display 面向公共场所人群的信息显示服务。',
+                '传播系统 Transmission System 将节目信号传输、分发到接收终端的系统。',
+                '系统架构 8K超高清公共显示传播系统主要由节目制作系统、播控平台、传输网络、接收终端等部分组成。',
+                '节目制作系统应具备8K超高清节目的采集、编辑、合成、渲染、转码等功能。',
+                '播控平台应具备8K超高清节目的内容审核、编排、播控、分发、版权管理等功能。',
+                '传输网络可采用有线网络、无线网络、卫星网络等方式传输8K超高清信号。',
+                '接收终端应支持8K超高清信号的接收、解码、显示，并具备相应的控制接口。',
+                '系统性能指标 图像分辨率：7680×4320；帧率：50Hz/60Hz/100Hz/120Hz；量化精度：10bit/12bit；色域：BT.2020。',
+                '音频编码格式应支持AAC、AC3、EAC3、DRA等标准。',
+                '视频编码格式应支持AVS3、H.265/HEVC等标准。',
+                '系统安全应符合国家网络安全等级保护相关要求。',
+                '运营维护应建立完善的监控、告警、故障处理机制。',
+                '附录A（资料性附录） 8K超高清公共显示传播系统典型应用场景。',
+                '附录B（资料性附录） 8K超高清公共显示传播系统关键设备选型建议。'
+            ];
+            
+            const data = [];
+            for (let i = 0; i < 50; i++) {
+                const content = contents[i % contents.length];
+                data.push({
+                    id: i + 1,
+                    content: `${content} [ID:${i+1}]`, // Add ID to make it unique and easy to track
+                    enabled: Math.random() > 0.2 // 80% enabled
+                });
+            }
+            return data;
+        }
+
+        // --- Core Logic ---
+        function getFilteredData() {
+            return chunks.filter(item => {
+                const matchKeyword = item.content.toLowerCase().includes(searchKeyword.toLowerCase());
+                const matchStatus = currentFilterStatus === 'all' || 
+                                    (currentFilterStatus === 'enabled' && item.enabled) ||
+                                    (currentFilterStatus === 'disabled' && !item.enabled);
+                return matchKeyword && matchStatus;
+            });
+        }
+
+        function getCurrentPageData() {
+            const filtered = getFilteredData();
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            return filtered.slice(start, end);
+        }
+
+        // --- Rendering ---
+        function renderChunks() {
+            const container = document.getElementById('chunk-list');
+            const data = getCurrentPageData();
+            container.innerHTML = '';
+
+            if (data.length === 0) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-64 text-gray-400">
+                        <i class="far fa-folder-open text-4xl mb-3"></i>
+                        <p>暂无数据</p>
+                    </div>
+                `;
+                renderPagination();
+                updateSelectAllCheckbox();
+                return;
+            }
+
+            data.forEach(chunk => {
+                const isSelected = selectedIds.has(chunk.id);
+                const div = document.createElement('div');
+                div.id = `chunk-row-${chunk.id}`;
+                div.className = `bg-white p-6 rounded-lg border ${isSelected ? 'border-blue-400 bg-blue-50' : 'border-gray-100'} hover:border-blue-200 hover:shadow-md transition-all flex items-start gap-4 group`;
+                div.innerHTML = `
+                    <div class="pt-1">
+                        <input type="checkbox" onchange="toggleSelection(${chunk.id}, this.checked)" ${isSelected ? 'checked' : ''} class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-5 w-5 cursor-pointer">
+                    </div>
+                    <div id="chunk-content-${chunk.id}" class="flex-1 text-base text-gray-700 leading-relaxed ${!chunk.enabled ? 'opacity-50' : ''}">
+                        ${chunk.content}
+                    </div>
+                    <div class="pt-1 pl-4 border-l border-gray-100 ml-2">
+                        <div id="chunk-toggle-wrapper-${chunk.id}" class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in" title="${chunk.enabled ? '已启用' : '已禁用'}">
+                            <input type="checkbox" id="toggle-${chunk.id}" onchange="toggleStatus(${chunk.id})" ${chunk.enabled ? 'checked' : ''} class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-gray-300 transition-all duration-300"/>
+                            <label for="toggle-${chunk.id}" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer transition-colors duration-300"></label>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+
+            renderPagination();
+            updateSelectAllCheckbox();
+            document.getElementById('total-count').textContent = `共 ${getFilteredData().length} 条`;
+        }
+
+        function renderPagination() {
+            const container = document.getElementById('pagination-controls');
+            const filtered = getFilteredData();
+            const totalPages = Math.ceil(filtered.length / pageSize);
+
+            let html = `
+                <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="w-8 h-8 flex items-center justify-center rounded border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fas fa-chevron-left text-xs"></i>
+                </button>
+            `;
+
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    const isActive = i === currentPage;
+                    html += `
+                        <button onclick="changePage(${i})" class="w-8 h-8 flex items-center justify-center rounded border ${isActive ? 'border-blue-500 bg-blue-500 text-white font-medium shadow-sm' : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-colors'}">
+                            ${i}
+                        </button>
+                    `;
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    html += `<span class="w-8 h-8 flex items-center justify-center text-gray-400">...</span>`;
+                }
+            }
+
+            html += `
+                <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages || totalPages === 0 ? 'disabled' : ''} class="w-8 h-8 flex items-center justify-center rounded border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fas fa-chevron-right text-xs"></i>
+                </button>
+                
+                <div class="flex items-center text-sm text-gray-600 ml-2">
+                    <span class="mr-2">跳至</span>
+                    <input type="number" min="1" max="${totalPages}" onchange="changePage(this.value)" class="w-10 h-8 border border-gray-300 rounded text-center focus:outline-none focus:ring-1 focus:ring-blue-500 mx-1 transition-shadow" value="${currentPage}">
+                    <span class="ml-1">页</span>
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        // --- Interaction Handlers ---
+        function handleSearch(val) {
+            searchKeyword = val.trim();
+            currentPage = 1;
+            renderChunks();
+        }
+
+        function toggleStatus(id) {
+            const chunk = chunks.find(c => c.id === id);
+            if (chunk) {
+                chunk.enabled = !chunk.enabled;
+                
+                // Update UI directly without re-rendering list
+                const contentDiv = document.getElementById(`chunk-content-${id}`);
+                const wrapperDiv = document.getElementById(`chunk-toggle-wrapper-${id}`);
+                
+                if (contentDiv) {
+                    if (chunk.enabled) {
+                        contentDiv.classList.remove('opacity-50');
+                    } else {
+                        contentDiv.classList.add('opacity-50');
+                    }
+                }
+                
+                if (wrapperDiv) {
+                    wrapperDiv.title = chunk.enabled ? '已启用' : '已禁用';
+                }
+
+                showToast(`已${chunk.enabled ? '启用' : '禁用'}该解析块`, 'success');
+            }
+        }
+
+        function toggleSelection(id, checked) {
+            if (checked) {
+                selectedIds.add(id);
+            } else {
+                selectedIds.delete(id);
+            }
+            
+            // Direct DOM update
+            const rowDiv = document.getElementById(`chunk-row-${id}`);
+            if (rowDiv) {
+                if (checked) {
+                    rowDiv.classList.remove('border-gray-100');
+                    rowDiv.classList.add('border-blue-400', 'bg-blue-50');
+                } else {
+                    rowDiv.classList.remove('border-blue-400', 'bg-blue-50');
+                    rowDiv.classList.add('border-gray-100');
+                }
+            }
+            updateSelectAllCheckbox();
+        }
+
+        function toggleSelectAll(checked) {
+            const pageData = getCurrentPageData();
+            pageData.forEach(chunk => {
+                if (checked) {
+                    selectedIds.add(chunk.id);
+                } else {
+                    selectedIds.delete(chunk.id);
+                }
+            });
+            renderChunks();
+        }
+
+        function updateSelectAllCheckbox() {
+            const pageData = getCurrentPageData();
+            const checkbox = document.getElementById('select-all');
+            if (pageData.length > 0) {
+                checkbox.checked = pageData.every(c => selectedIds.has(c.id));
+            } else {
+                checkbox.checked = false;
+            }
+        }
+
+        function changePage(page) {
+            const totalPages = Math.ceil(getFilteredData().length / pageSize);
+            page = parseInt(page);
+            if (isNaN(page) || page < 1 || (totalPages > 0 && page > totalPages)) return;
+            currentPage = page;
+            renderChunks();
+        }
+
+        function handleBatchDelete() {
+            if (selectedIds.size === 0) {
+                showToast('请先选择要删除的解析块', 'error');
+                return;
+            }
+            
+            if (confirm(`确定要删除选中的 ${selectedIds.size} 个解析块吗？`)) {
+                chunks = chunks.filter(c => !selectedIds.has(c.id));
+                selectedIds.clear();
+                
+                // Adjust page if empty
+                const totalPages = Math.ceil(getFilteredData().length / pageSize);
+                if (currentPage > totalPages && totalPages > 0) {
+                    currentPage = totalPages;
+                }
+                
+                renderChunks();
+                showToast('删除成功', 'success');
+            }
+        }
+
+        function handleAdd() {
+            showToast('添加功能开发中...', 'info');
+        }
+
+        // --- Filter Dropdown ---
+        function toggleFilterDropdown() {
+            const dropdown = document.getElementById('filter-dropdown');
+            if (dropdown.classList.contains('hidden')) {
+                dropdown.classList.remove('hidden');
+                // Trigger reflow
+                void dropdown.offsetWidth;
+                dropdown.classList.remove('opacity-0', 'scale-95');
+            } else {
+                dropdown.classList.add('opacity-0', 'scale-95');
+                setTimeout(() => dropdown.classList.add('hidden'), 200);
+            }
+        }
+
+        function setFilter(status) {
+            currentFilterStatus = status;
+            currentPage = 1;
+            
+            // Update Checks
+            document.getElementById('check-all').classList.toggle('opacity-0', status !== 'all');
+            document.getElementById('check-enabled').classList.toggle('opacity-0', status !== 'enabled');
+            document.getElementById('check-disabled').classList.toggle('opacity-0', status !== 'disabled');
+            
+            // Close Dropdown
+            toggleFilterDropdown();
+            
+            renderChunks();
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#filter-btn') && !e.target.closest('#filter-dropdown')) {
+                const dropdown = document.getElementById('filter-dropdown');
+                if (!dropdown.classList.contains('hidden')) {
+                    dropdown.classList.add('opacity-0', 'scale-95');
+                    setTimeout(() => dropdown.classList.add('hidden'), 200);
+                }
+            }
+        });
+
+        // --- Toast ---
+        let toastTimeout;
+        let toastDebounceTimer;
+
+        function showToast(msg, type = 'success') {
+            // Debounce: Cancel previous pending toast call
+            if (toastDebounceTimer) {
+                clearTimeout(toastDebounceTimer);
+            }
+
+            // Small delay to coalesce rapid updates
+            toastDebounceTimer = setTimeout(() => {
+                executeShowToast(msg, type);
+            }, 100);
+        }
+
+        function executeShowToast(msg, type) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            const toastTitle = document.getElementById('toast-title');
+            const toastIcon = document.getElementById('toast-icon');
+
+            // Clear existing display timeout to prevent premature hiding
+            if (toastTimeout) {
+                clearTimeout(toastTimeout);
+            }
+
+            toastMsg.textContent = msg;
+
+            if (type === 'success') {
+                toastTitle.textContent = '操作成功';
+                toastIcon.className = 'w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-500 shrink-0';
+                toastIcon.innerHTML = '<i class="fas fa-check"></i>';
+            } else if (type === 'error') {
+                toastTitle.textContent = '操作失败';
+                toastIcon.className = 'w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-500 shrink-0';
+                toastIcon.innerHTML = '<i class="fas fa-times"></i>';
+            } else {
+                toastTitle.textContent = '提示';
+                toastIcon.className = 'w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-500 shrink-0';
+                toastIcon.innerHTML = '<i class="fas fa-info"></i>';
+            }
+
+            toast.classList.remove('translate-x-[120%]');
+            toastTimeout = setTimeout(() => {
+                toast.classList.add('translate-x-[120%]');
+            }, 3000);
+        }
+
+        // --- Init ---
+        function init() {
+            // Get params from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const fileName = urlParams.get('file');
+            const kbTitle = urlParams.get('kb');
+
+            if (fileName) {
+                document.getElementById('file-title').textContent = decodeURIComponent(fileName);
+                document.title = `${decodeURIComponent(fileName)} - 知识点解析`;
+            }
+            if (kbTitle) {
+                document.getElementById('kb-title').textContent = decodeURIComponent(kbTitle);
+            }
+
+            chunks = generateChunks();
+            renderChunks();
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

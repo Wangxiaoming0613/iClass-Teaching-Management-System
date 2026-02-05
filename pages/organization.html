@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>组织管理</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="p-6 bg-gray-50 min-h-screen">
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-bold text-gray-800">组织管理</h2>
+            <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">新增组织</button>
+        </div>
+        <div class="border-t border-gray-200 pt-4">
+            <!-- 树形结构或列表占位 -->
+            <div class="flex">
+                <div class="w-1/4 border-r pr-4">
+                    <div class="font-bold mb-2">组织架构树</div>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li class="pl-2">校本部</li>
+                        <li class="pl-4 text-blue-600 bg-blue-50 rounded">计算机学院</li>
+                        <li class="pl-6">软件工程系</li>
+                        <li class="pl-6">网络安全系</li>
+                        <li class="pl-4">外语学院</li>
+                    </ul>
+                </div>
+                <div class="w-3/4 pl-4">
+                    <div class="font-bold mb-2">部门详情</div>
+                    <div class="bg-gray-50 p-4 rounded h-64 flex items-center justify-center text-gray-400">
+                        部门人员列表 / 详细信息
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
