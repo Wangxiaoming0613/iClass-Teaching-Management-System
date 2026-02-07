@@ -85,10 +85,10 @@
 
         .date-picker-panel {
             position: absolute;
-            bottom: 100%;
+            top: 100%;
             left: 0;
-            right: 0;
-            margin-bottom: 10px;
+            width: 280px;
+            margin-top: 10px;
             background: #ffffff;
             border: 1px solid var(--dp-border);
             border-radius: 14px;
@@ -255,15 +255,60 @@
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex-1 min-h-0 flex flex-col relative overflow-hidden">
         
         <!-- Header: Filters & Add Button -->
-        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 gap-4 z-10 relative shrink-0">
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 gap-4 z-30 relative shrink-0">
             <!-- Left: Date Range Filter + Buttons -->
             <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                 <!-- Date Range Input -->
-                <div class="relative w-full sm:w-64">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <i class="fas fa-calendar-alt text-gray-400"></i>
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <div class="relative date-field w-full sm:w-44">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-calendar-alt text-gray-400"></i>
+                        </div>
+                        <input type="text" id="filter-start-date" placeholder="开始日期" autocomplete="off" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-600 transition-shadow">
+                        <button type="button" class="date-trigger absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 transition-colors">
+                            <i class="far fa-calendar-alt"></i>
+                        </button>
+                        <div id="filter-start-date-picker" class="date-picker-panel">
+                            <div class="date-picker-header">
+                                <button type="button" class="date-picker-nav" data-action="prev"><i class="fas fa-chevron-left text-xs"></i></button>
+                                <span class="date-picker-title" data-role="title"></span>
+                                <button type="button" class="date-picker-nav" data-action="next"><i class="fas fa-chevron-right text-xs"></i></button>
+                            </div>
+                            <div class="date-picker-weekdays">
+                                <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+                            </div>
+                            <div class="date-picker-grid" data-role="grid"></div>
+                            <div class="date-picker-footer">
+                                <button type="button" class="date-picker-action" data-action="clear">清除</button>
+                                <button type="button" class="date-picker-action" data-action="today">今天</button>
+                            </div>
+                        </div>
                     </div>
-                    <input type="text" id="date-range" placeholder="请选择起止日期" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-600 transition-shadow">
+                    <span class="text-gray-400 font-medium">-</span>
+                    <div class="relative date-field w-full sm:w-44">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-calendar-alt text-gray-400"></i>
+                        </div>
+                        <input type="text" id="filter-end-date" placeholder="结束日期" autocomplete="off" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-600 transition-shadow">
+                        <button type="button" class="date-trigger absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 transition-colors">
+                            <i class="far fa-calendar-alt"></i>
+                        </button>
+                        <div id="filter-end-date-picker" class="date-picker-panel">
+                            <div class="date-picker-header">
+                                <button type="button" class="date-picker-nav" data-action="prev"><i class="fas fa-chevron-left text-xs"></i></button>
+                                <span class="date-picker-title" data-role="title"></span>
+                                <button type="button" class="date-picker-nav" data-action="next"><i class="fas fa-chevron-right text-xs"></i></button>
+                            </div>
+                            <div class="date-picker-weekdays">
+                                <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+                            </div>
+                            <div class="date-picker-grid" data-role="grid"></div>
+                            <div class="date-picker-footer">
+                                <button type="button" class="date-picker-action" data-action="clear">清除</button>
+                                <button type="button" class="date-picker-action" data-action="today">今天</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Buttons -->
@@ -357,11 +402,11 @@
                             <i id="term-select-icon" class="fas fa-chevron-down text-xs text-gray-400 transition-transform duration-200"></i>
                         </button>
                         <div id="term-options" class="absolute left-0 right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-lg py-2 origin-top transition-all duration-200 ease-out opacity-0 scale-95 -translate-y-1 pointer-events-none z-50">
-                            <button type="button" class="term-option flex items-center justify-between w-full px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors" data-value="秋季学期">
+                            <button type="button" class="term-option flex items-center justify-between w-full px-3 py-2 mx-1 my-0.5 rounded-md text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors" data-value="秋季学期">
                                 <span>秋季学期</span>
                                 <i class="fas fa-check text-blue-500 text-xs opacity-0 transition-opacity"></i>
                             </button>
-                            <button type="button" class="term-option flex items-center justify-between w-full px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors" data-value="春季学期">
+                            <button type="button" class="term-option flex items-center justify-between w-full px-3 py-2 mx-1 my-0.5 rounded-md text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors" data-value="春季学期">
                                 <span>春季学期</span>
                                 <i class="fas fa-check text-blue-500 text-xs opacity-0 transition-opacity"></i>
                             </button>
@@ -434,28 +479,17 @@
     </div>
 
     <!-- Delete Modal -->
-    <div id="delete-modal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="absolute inset-0 bg-gray-500 bg-opacity-75 transition-opacity backdrop-blur-sm" onclick="closeDeleteModal()"></div>
-        <div class="fixed inset-0 z-10 overflow-y-auto">
-            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                <div id="delete-modal-panel" class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md scale-95 opacity-0 duration-300">
-                    <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                        <div class="sm:flex sm:items-start">
-                            <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                                <i class="fas fa-exclamation-triangle text-red-600"></i>
-                            </div>
-                            <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-                                <h3 class="text-base font-semibold leading-6 text-gray-900" id="modal-title">删除学期</h3>
-                                <div class="mt-2">
-                                    <p class="text-sm text-gray-500">确定要删除该学期吗？此操作无法撤销，且可能影响关联的课程和教学数据。</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-                        <button type="button" class="inline-flex w-full justify-center rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto transition-colors" onclick="confirmDelete()">删除</button>
-                        <button type="button" class="mt-3 inline-flex w-full justify-center rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto transition-colors" onclick="closeDeleteModal()">取消</button>
-                    </div>
+    <div id="delete-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 backdrop-blur-sm transition-opacity opacity-0">
+        <div class="bg-white rounded-xl shadow-2xl w-80 transform scale-95 transition-transform duration-200" id="delete-modal-content">
+            <div class="p-6 text-center">
+                <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4 text-red-500">
+                    <i class="fas fa-exclamation-triangle text-xl"></i>
+                </div>
+                <h3 class="text-lg font-bold text-gray-800 mb-2">删除学期</h3>
+                <p class="text-gray-500 text-sm mb-6">确定要删除该学期吗？此操作无法撤销，且可能影响关联的课程和教学数据。</p>
+                <div class="flex justify-center gap-3">
+                    <button onclick="closeDeleteModal()" class="px-4 py-2 text-sm text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors font-medium">取消</button>
+                    <button onclick="confirmDelete()" class="px-4 py-2 text-sm text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors font-medium shadow-sm hover:shadow">删除</button>
                 </div>
             </div>
         </div>
@@ -648,28 +682,39 @@
         // --- Interactions ---
 
         function handleSearch() {
-            const dateRange = document.getElementById('date-range').value.toLowerCase();
-            // Simple filter logic: match any text or logic
-            // For mock demo, we'll just filter by name match if user types something similar to date or name
-            // But since input is "Date Range", realistically we'd parse dates.
-            // Here we assume simple text match for prototype unless specific logic needed.
-            // Let's implement name search if the user types something, but the input is date-range placeholder.
-            // Let's assume the user might type a year like "2024".
-            
+            const startValue = parseDateValue(document.getElementById('filter-start-date').value);
+            const endValue = parseDateValue(document.getElementById('filter-end-date').value);
+
+            if (startValue && endValue && startValue > endValue) {
+                showToast('开始日期不能大于结束日期', 'error');
+                return;
+            }
+
             filteredSemesters = semesters.filter(item => {
-                if (!dateRange) return true;
-                return item.name.includes(dateRange) || 
-                       item.startDate.includes(dateRange) || 
-                       item.endDate.includes(dateRange);
+                if (!startValue && !endValue) return true;
+                const itemStart = parseDateValue(item.startDate);
+                const itemEnd = parseDateValue(item.endDate);
+                if (!itemStart || !itemEnd) return false;
+                if (startValue && endValue) {
+                    return itemStart <= endValue && itemEnd >= startValue;
+                }
+                if (startValue) {
+                    return itemEnd >= startValue;
+                }
+                return itemStart <= endValue;
             });
             currentPage = 1;
             renderGrid();
             renderPagination();
-            showToast('查询成功', 'success');
+            
+            if (startValue || endValue) {
+                showToast('查询成功', 'success');
+            }
         }
 
         function handleReset() {
-            document.getElementById('date-range').value = '';
+            document.getElementById('filter-start-date').value = '';
+            document.getElementById('filter-end-date').value = '';
             filteredSemesters = [...semesters];
             currentPage = 1;
             renderGrid();
@@ -736,8 +781,8 @@
 
             termDropdown.items.forEach((item) => {
                 const selected = item.dataset.value === value;
-                item.classList.toggle('bg-blue-50', selected);
-                item.classList.toggle('text-blue-600', selected);
+                // item.classList.toggle('bg-blue-50', selected);
+                // item.classList.toggle('text-blue-600', selected);
                 const check = item.querySelector('i');
                 if (check) {
                     check.classList.toggle('opacity-100', selected);
@@ -780,6 +825,8 @@
 
         function initDatePickers() {
             if (datePickerInitialized) return;
+            setupDatePicker('filter-start-date', 'filter-start-date-picker');
+            setupDatePicker('filter-end-date', 'filter-end-date-picker');
             setupDatePicker('start-date', 'start-date-picker');
             setupDatePicker('end-date', 'end-date-picker');
             datePickerInitialized = true;
@@ -1165,6 +1212,18 @@
             picker.sync();
         }
 
+        const inputErrorClasses = ['border-red-500', 'ring-1', 'ring-red-300', 'focus:border-red-400', 'focus:ring-red-400'];
+
+        function clearInputError(input) {
+            if (!input) return;
+            input.classList.remove(...inputErrorClasses);
+        }
+
+        function setInputError(input) {
+            if (!input) return;
+            input.classList.add(...inputErrorClasses);
+        }
+
         // --- Modal Logic ---
 
         function openModal(mode, id = null) {
@@ -1229,15 +1288,42 @@
         }
 
         function saveSemester() {
-            const yearStart = document.getElementById('year-start').value.trim();
-            const yearEnd = document.getElementById('year-end').value.trim();
+            const yearStartInput = document.getElementById('year-start');
+            const yearEndInput = document.getElementById('year-end');
+            const startDateInput = document.getElementById('start-date');
+            const endDateInput = document.getElementById('end-date');
+            const yearStart = yearStartInput.value.trim();
+            const yearEnd = yearEndInput.value.trim();
             const term = document.getElementById('term-select').value;
-            const startDate = document.getElementById('start-date').value;
-            const endDate = document.getElementById('end-date').value;
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
             const isCurrent = document.getElementById('is-current').checked;
+
+            clearInputError(yearStartInput);
+            clearInputError(yearEndInput);
+            clearInputError(startDateInput);
+            clearInputError(endDateInput);
 
             if (!yearStart || !yearEnd || !term || !startDate || !endDate) {
                 showToast('请填写所有必填项', 'error');
+                return;
+            }
+
+            const yearStartValue = Number(yearStart);
+            const yearEndValue = Number(yearEnd);
+            if (!Number.isNaN(yearStartValue) && !Number.isNaN(yearEndValue) && yearStartValue > yearEndValue) {
+                setInputError(yearStartInput);
+                setInputError(yearEndInput);
+                showToast('学年开始年份不能大于结束年份', 'error');
+                return;
+            }
+
+            const startDateValue = parseDateValue(startDate);
+            const endDateValue = parseDateValue(endDate);
+            if (startDateValue && endDateValue && startDateValue > endDateValue) {
+                setInputError(startDateInput);
+                setInputError(endDateInput);
+                showToast('开始日期不能大于结束日期', 'error');
                 return;
             }
 
@@ -1301,25 +1387,23 @@
         function openDeleteModal(id) {
             deleteId = id;
             const modal = document.getElementById('delete-modal');
-            const panel = document.getElementById('delete-modal-panel');
+            const panel = document.getElementById('delete-modal-content');
             
             modal.classList.remove('hidden');
-            requestAnimationFrame(() => {
-                panel.classList.remove('scale-95', 'opacity-0');
-                panel.classList.add('scale-100', 'opacity-100');
-            });
+            void modal.offsetWidth;
+            modal.classList.remove('opacity-0');
+            panel.classList.remove('scale-95');
         }
 
         function closeDeleteModal() {
             const modal = document.getElementById('delete-modal');
-            const panel = document.getElementById('delete-modal-panel');
+            const panel = document.getElementById('delete-modal-content');
             
-            panel.classList.remove('scale-100', 'opacity-100');
-            panel.classList.add('scale-95', 'opacity-0');
-            
+            modal.classList.add('opacity-0');
+            panel.classList.add('scale-95');
             setTimeout(() => {
                 modal.classList.add('hidden');
-            }, 300);
+            }, 200);
             deleteId = null;
         }
 
@@ -1403,6 +1487,7 @@
         // Init
         document.addEventListener('DOMContentLoaded', () => {
             initTermDropdown();
+            initDatePickers();
             renderGrid();
             renderPagination();
         });

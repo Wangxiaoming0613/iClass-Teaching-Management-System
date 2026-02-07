@@ -29,7 +29,7 @@
                     <a href="javascript:void(0)" onclick="openPage('pages/data-display.html', '数据展示')" data-path="pages/data-display.html" class="nav-item flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors group">
                         <i class="fas fa-chart-line w-6 text-center mr-2 text-gray-400 group-hover:text-blue-600 nav-icon"></i>
                         <span class="nav-text whitespace-nowrap">数据展示</span>
-                    </a>
+                    </a> 
                 </li>
                 <li>
                     <a href="javascript:void(0)" onclick="openPage('pages/organization-management.html', '组织管理')" data-path="pages/organization-management.html" class="nav-item flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors group">
@@ -121,11 +121,11 @@
                 <button id="fullscreen-btn" class="text-gray-400 hover:text-blue-600 focus:outline-none" title="全屏">
                     <i class="fas fa-expand text-lg"></i>
                 </button>
-                <div class="relative cursor-pointer flex items-center space-x-2 group">
+                <div class="relative cursor-pointer flex items-center space-x-2" id="user-menu">
                     <img src="https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff" alt="User" class="w-8 h-8 rounded-full border-2 border-white shadow-sm">
                     <i class="fas fa-caret-down text-gray-400 text-xs"></i>
                     <!-- 下拉菜单 -->
-                    <div class="absolute top-full right-0 mt-2 w-32 bg-white rounded-md shadow-lg border border-gray-100 hidden group-hover:block py-1 z-50">
+                    <div class="absolute top-full right-0 mt-2 w-32 bg-white rounded-md shadow-lg border border-gray-100 hidden py-1 z-50" id="user-menu-dropdown">
                         <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50">个人中心</a>
                         <a href="login.html" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">退出登录</a>
                     </div>

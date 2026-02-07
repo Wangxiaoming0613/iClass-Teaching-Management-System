@@ -24,6 +24,26 @@
         .table-container::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
+
+        /* Modal Transitions */
+        .modal-enter {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        .modal-enter-active {
+            opacity: 1;
+            transform: scale(100%);
+            transition: all 0.2s ease-out;
+        }
+        .modal-exit {
+            opacity: 1;
+            transform: scale(100%);
+        }
+        .modal-exit-active {
+            opacity: 0;
+            transform: scale(0.95);
+            transition: all 0.2s ease-in;
+        }
     </style>
 </head>
 <body class="p-4 bg-gray-50 h-screen overflow-hidden font-sans text-gray-700 flex flex-col">
@@ -34,12 +54,12 @@
         <div class="flex flex-wrap items-center gap-3 mb-4 shrink-0 bg-gray-50/50 p-3 rounded-lg border border-gray-100">
             <div class="flex items-center gap-2">
                 <span class="text-sm font-medium text-gray-600">用户名：</span>
-                <input type="text" placeholder="请输入用户名" class="bg-white border border-gray-300 text-gray-700 py-1.5 px-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-48 text-sm transition-shadow">
+                <input type="text" id="search-username" placeholder="请输入用户名" class="bg-white border border-gray-300 text-gray-700 py-1.5 px-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-48 text-sm transition-shadow">
             </div>
-            <button class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1.5 px-4 rounded-md text-sm transition-all duration-200 shadow-sm hover:shadow">
+            <button onclick="handleSearch()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1.5 px-4 rounded-md text-sm transition-all duration-200 shadow-sm hover:shadow">
                 查询
             </button>
-            <button class="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 font-medium py-1.5 px-4 rounded-md text-sm transition-all duration-200 shadow-sm hover:shadow">
+            <button onclick="handleReset()" class="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 font-medium py-1.5 px-4 rounded-md text-sm transition-all duration-200 shadow-sm hover:shadow">
                 重置
             </button>
         </div>
@@ -47,15 +67,23 @@
         <!-- Toolbar Section -->
         <div class="flex flex-wrap items-center justify-between mb-3 shrink-0">
             <div class="flex items-center gap-3">
-                <button class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 shadow-sm hover:shadow flex items-center gap-2">
+                <div class="relative" id="role-filter-dropdown">
+                    <button type="button" id="role-filter-btn" class="w-36 px-3 py-2 border border-gray-300 rounded-lg bg-white text-left text-sm flex items-center justify-between hover:border-blue-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                        <span id="role-filter-text" class="text-gray-500">全部角色</span>
+                        <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform duration-200"></i>
+                    </button>
+                    <div id="role-filter-options" class="hidden absolute top-full left-0 right-0 mt-1 bg-white border border-gray-100 rounded-lg shadow-lg z-50 py-1 max-h-48 overflow-y-auto opacity-0 scale-95 transform origin-top transition-all duration-200"></div>
+                    <input type="hidden" id="role-filter">
+                </div>
+                <button onclick="openCreateModal()" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 shadow-sm hover:shadow flex items-center gap-2">
                     <i class="fas fa-plus text-xs"></i> 新建用户
                 </button>
-                <button class="bg-white hover:bg-red-50 text-gray-700 hover:text-red-600 border border-gray-300 hover:border-red-200 font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 shadow-sm hover:shadow">
+                <button onclick="handleBatchDelete()" class="bg-white hover:bg-red-50 text-gray-700 hover:text-red-600 border border-gray-300 hover:border-red-200 font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 shadow-sm hover:shadow">
                     批量删除
                 </button>
             </div>
-            <button class="bg-blue-400 hover:bg-blue-500 text-white font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 shadow-sm hover:shadow">
-                刷新
+            <button onclick="handleRefresh()" class="bg-blue-400 hover:bg-blue-500 text-white font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 shadow-sm hover:shadow flex items-center">
+                <i class="fas fa-sync-alt mr-2" id="refresh-icon"></i> 刷新
             </button>
         </div>
 
@@ -65,13 +93,14 @@
                 <thead class="bg-gray-50/90 backdrop-blur-sm sticky top-0 shadow-sm z-30">
                     <tr>
                         <th scope="col" class="px-6 py-4 text-center w-12">
-                            <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4 cursor-pointer">
+                            <input type="checkbox" id="select-all" onchange="toggleSelectAll()" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4 cursor-pointer">
                         </th>
+                        <th scope="col" class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">昵称</th>
                         <th scope="col" class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">用户名</th>
                         <th scope="col" class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">创建时间</th>
                         <th scope="col" class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">更新时间</th>
                         <th scope="col" class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">角色</th>
-                        <th scope="col" class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">操作</th>
+                        <th scope="col" class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider sticky right-0 bg-gray-50/90 backdrop-blur-sm shadow-[-5px_0_5px_-5px_rgba(0,0,0,0.1)] z-40">操作</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200 text-sm" id="user-table-body">
@@ -81,98 +110,692 @@
         </div>
 
         <!-- Pagination Section -->
-        <div class="flex flex-wrap items-center justify-between pt-3 mt-auto shrink-0">
-            <div class="text-sm text-gray-600 font-medium">
-                共 8 条
+        <div class="flex flex-wrap items-center justify-between pt-3 mt-auto shrink-0" id="pagination-container">
+            <!-- Pagination rendered via JS -->
+        </div>
+    </div>
+
+    <!-- Create User Modal -->
+    <div id="create-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 backdrop-blur-sm transition-opacity opacity-0">
+        <div class="bg-white rounded-xl shadow-2xl w-96 transform scale-95 transition-transform duration-200" id="create-modal-content">
+            <div class="flex justify-between items-center p-5 border-b border-gray-100">
+                <h3 class="text-lg font-bold text-gray-800">新建用户</h3>
+                <button onclick="closeCreateModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-            <div class="flex items-center space-x-3">
-                <div class="relative group">
-                    <select class="appearance-none bg-white border border-gray-300 text-gray-700 py-1.5 pl-3 pr-8 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-shadow">
-                        <option>10条/页</option>
-                        <option>20条/页</option>
-                        <option>50条/页</option>
-                    </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400 group-hover:text-blue-500 transition-colors">
-                        <i class="fas fa-chevron-down text-xs"></i>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2"><span class="text-red-500 mr-1">*</span>昵称</label>
+                    <input type="text" id="create-nickname" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm" placeholder="请输入昵称">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2"><span class="text-red-500 mr-1">*</span>用户名</label>
+                    <input type="text" id="create-username" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm" placeholder="请输入用户名">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2"><span class="text-red-500 mr-1">*</span>角色</label>
+                    <div class="relative" id="create-role-dropdown">
+                        <button type="button" id="create-role-btn" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-left text-sm flex items-center justify-between hover:border-blue-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                            <span id="create-role-text" class="text-gray-500">请选择角色</span>
+                            <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform duration-200"></i>
+                        </button>
+                        <div id="create-role-options" class="hidden absolute top-full left-0 right-0 mt-1 bg-white border border-gray-100 rounded-lg shadow-lg z-50 py-1 max-h-48 overflow-y-auto opacity-0 scale-95 transform origin-top transition-all duration-200">
+                            <!-- Options will be populated by JS -->
+                        </div>
+                        <input type="hidden" id="create-role">
                     </div>
                 </div>
+            </div>
+            <div class="p-5 border-t border-gray-100 flex justify-end gap-3">
+                <button onclick="closeCreateModal()" class="px-4 py-2 text-sm text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors font-medium">取消</button>
+                <button onclick="saveUser()" class="px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors font-medium shadow-sm hover:shadow">保存</button>
+            </div>
+        </div>
+    </div>
 
-                <div class="flex items-center space-x-1">
-                    <button class="w-8 h-8 flex items-center justify-center rounded border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-colors">
-                        <i class="fas fa-chevron-left text-xs"></i>
-                    </button>
-                    <button class="w-8 h-8 flex items-center justify-center rounded border border-blue-500 bg-blue-500 text-white font-medium shadow-sm">
-                        1
-                    </button>
-                    <button class="w-8 h-8 flex items-center justify-center rounded border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-colors">
-                        <i class="fas fa-chevron-right text-xs"></i>
-                    </button>
+    <!-- Edit User Modal -->
+    <div id="edit-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 backdrop-blur-sm transition-opacity opacity-0">
+        <div class="bg-white rounded-xl shadow-2xl w-96 transform scale-95 transition-transform duration-200" id="edit-modal-content">
+            <div class="flex justify-between items-center p-5 border-b border-gray-100">
+                <h3 class="text-lg font-bold text-gray-800">编辑用户</h3>
+                <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <input type="hidden" id="edit-id">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2"><span class="text-red-500 mr-1">*</span>昵称</label>
+                    <input type="text" id="edit-nickname" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm" placeholder="请输入昵称">
                 </div>
-                
-                <div class="flex items-center text-sm text-gray-600 ml-2">
-                    <span class="mr-2">跳至</span>
-                    <input type="text" class="w-10 h-8 border border-gray-300 rounded text-center focus:outline-none focus:ring-1 focus:ring-blue-500 mx-1 transition-shadow">
-                    <span class="ml-1">页</span>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2"><span class="text-red-500 mr-1">*</span>用户名</label>
+                    <input type="text" id="edit-username" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm" placeholder="请输入用户名">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2"><span class="text-red-500 mr-1">*</span>角色</label>
+                    <div class="relative" id="edit-role-dropdown">
+                        <button type="button" id="edit-role-btn" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-left text-sm flex items-center justify-between hover:border-blue-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                            <span id="edit-role-text" class="text-gray-500">请选择角色</span>
+                            <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform duration-200"></i>
+                        </button>
+                        <div id="edit-role-options" class="hidden absolute top-full left-0 right-0 mt-1 bg-white border border-gray-100 rounded-lg shadow-lg z-50 py-1 max-h-48 overflow-y-auto opacity-0 scale-95 transform origin-top transition-all duration-200">
+                            <!-- Options will be populated by JS -->
+                        </div>
+                        <input type="hidden" id="edit-role">
+                    </div>
+                </div>
+            </div>
+            <div class="p-5 border-t border-gray-100 flex justify-end gap-3">
+                <button onclick="closeEditModal()" class="px-4 py-2 text-sm text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors font-medium">取消</button>
+                <button onclick="updateUser()" class="px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors font-medium shadow-sm hover:shadow">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 backdrop-blur-sm transition-opacity opacity-0">
+        <div class="bg-white rounded-xl shadow-2xl w-80 transform scale-95 transition-transform duration-200" id="delete-modal-content">
+            <div class="p-6 text-center">
+                <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4 text-red-500">
+                    <i class="fas fa-exclamation-triangle text-xl"></i>
+                </div>
+                <h3 class="text-lg font-bold text-gray-800 mb-2">删除用户</h3>
+                <p class="text-gray-500 text-sm mb-6">确定要删除选中的用户吗？此操作无法撤销。</p>
+                <div class="flex justify-center gap-3">
+                    <button onclick="closeDeleteModal()" class="px-4 py-2 text-sm text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors font-medium">取消</button>
+                    <button onclick="confirmDelete()" class="px-4 py-2 text-sm text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors font-medium shadow-sm hover:shadow">删除</button>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Toast Notification -->
+    <div id="toast-notification" class="fixed top-4 right-4 bg-white border border-green-100 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-lg p-4 flex items-center gap-3 transform translate-x-[120%] transition-transform duration-300 z-[100]">
+        <div id="toast-icon-container" class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-500 shrink-0">
+            <i id="toast-icon" class="fas fa-check"></i>
+        </div>
+        <div>
+            <h4 id="toast-title" class="font-bold text-gray-800 text-sm">操作成功</h4>
+            <p id="toast-message" class="text-xs text-gray-500 mt-0.5">操作成功</p>
+        </div>
+    </div>
+
     <script>
-        const users = [
-            { id: 1, username: 'super_admin', createTime: '2023-03-14 10:25:48', updateTime: '2024-3-25 14:28:36', role: '超级管理员' },
-            { id: 2, username: 'office1', createTime: '2024-06-14 08:43:48', updateTime: '2024-8-25 14:28:36', role: '教务管理员' },
-            { id: 3, username: 'admin1', createTime: '2024-08-19 14:23:48', updateTime: '2024-9-13 14:28:36', role: '管理员' },
-            { id: 4, username: 'teacher1', createTime: '2023-03-14 10:25:48', updateTime: '2024-3-25 14:28:36', role: '教师' },
-            { id: 5, username: 'office3', createTime: '2024-06-14 08:43:48', updateTime: '2024-8-25 14:28:36', role: '教务管理员' },
-            { id: 6, username: 'teacher2', createTime: '2024-08-19 14:23:48', updateTime: '2024-9-13 14:28:36', role: '教师' },
-            { id: 7, username: 'office4', createTime: '2023-03-14 10:25:48', updateTime: '2024-3-25 14:28:36', role: '教务管理员' },
-            { id: 8, username: 'teacher3', createTime: '2024-06-14 08:43:48', updateTime: '2024-8-25 14:28:36', role: '教师' },
+        // --- State Management ---
+        let users = [
+            { id: 1, nickname: '系统管理员', username: 'super_admin', createTime: '2023-03-14 10:25:48', updateTime: '2024-03-25 14:28:36', role: '超级管理员' },
+            { id: 2, nickname: '教务处_小王', username: 'office1', createTime: '2024-06-14 08:43:48', updateTime: '2024-08-25 14:28:36', role: '教务管理员' },
+            { id: 3, nickname: '管理员_小丽', username: 'admin1', createTime: '2024-08-19 14:23:48', updateTime: '2024-09-13 14:28:36', role: '管理员' },
+            { id: 4, nickname: '教师_谢兰', username: 'teacher1', createTime: '2023-03-14 10:25:48', updateTime: '2024-03-25 14:28:36', role: '教师' },
+            { id: 5, nickname: '教务处_陈西东', username: 'office3', createTime: '2024-06-14 08:43:48', updateTime: '2024-08-25 14:28:36', role: '教务管理员' },
+            { id: 6, nickname: '教师_刘水为', username: 'teacher2', createTime: '2024-08-19 14:23:48', updateTime: '2024-09-13 14:28:36', role: '教师' },
+            { id: 7, nickname: '教务处_刘小燕', username: 'office4', createTime: '2023-03-14 10:25:48', updateTime: '2024-03-25 14:28:36', role: '教务管理员' },
+            { id: 8, nickname: '教师_元齐全', username: 'teacher3', createTime: '2024-06-14 08:43:48', updateTime: '2024-08-25 14:28:36', role: '教师' },
         ];
+        
+        // Generate more mock data
+        const firstNames = ['赵', '钱', '孙', '李', '周', '吴', '郑', '王', '冯', '陈'];
+        const lastNames = ['伟', '芳', '娜', '敏', '静', '秀', '强', '磊', '军', '洋'];
+        const depts = ['教务处', '管理员', '教师'];
+
+        for (let i = 9; i <= 25; i++) {
+            const role = i % 2 === 0 ? '教师' : '管理员';
+            const dept = role === '教师' ? '教师' : (role === '管理员' ? '管理员' : '教务处');
+            const name = firstNames[i % 10] + lastNames[i % 10];
+            
+            users.push({
+                id: i,
+                nickname: `${dept}_${name}`,
+                username: `user_${i}`,
+                createTime: '2024-01-01 10:00:00',
+                updateTime: '2024-01-02 10:00:00',
+                role: role
+            });
+        }
+
+        let filteredUsers = [...users];
+        let currentPage = 1;
+        let pageSize = 10;
+        let selectedIds = new Set();
+        let deleteIds = []; // IDs to be deleted (single or batch)
+        let selectedRoleFilter = '全部角色';
 
         const roleStyles = {
-            '超级管理员': 'bg-red-100 text-red-600 border border-red-200',
-            '教务管理员': 'bg-blue-100 text-blue-600 border border-blue-200',
-            '管理员': 'bg-purple-100 text-purple-600 border border-purple-200',
-            '教师': 'bg-green-100 text-green-600 border border-green-200'
+            '超级管理员': 'bg-red-50 text-red-600 border border-red-200',
+            '教务管理员': 'bg-blue-50 text-blue-600 border border-blue-200',
+            '管理员': 'bg-purple-50 text-purple-600 border border-purple-200',
+            '教师': 'bg-green-50 text-green-600 border border-green-200'
         };
 
-        const tableBody = document.getElementById('user-table-body');
+        // --- Render Functions ---
 
-        users.forEach(user => {
-            const row = document.createElement('tr');
-            row.className = 'hover:bg-gray-50 transition-colors group';
+        function renderTable() {
+            const tableBody = document.getElementById('user-table-body');
+            tableBody.innerHTML = '';
+
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            const pageData = filteredUsers.slice(start, end);
+            const allSelected = pageData.length > 0 && pageData.every(user => selectedIds.has(user.id));
+
+            document.getElementById('select-all').checked = allSelected;
+            document.getElementById('select-all').indeterminate = !allSelected && pageData.some(user => selectedIds.has(user.id));
+
+            if (pageData.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-10 text-center text-gray-500">
+                            <i class="fas fa-inbox text-4xl mb-3 text-gray-300 block"></i>
+                            暂无数据
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            pageData.forEach(user => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition-colors group';
+                const isSelected = selectedIds.has(user.id);
+                if (isSelected) row.classList.add('bg-blue-50/30');
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 text-center">
+                        <input type="checkbox" onchange="toggleSelection(${user.id})" ${isSelected ? 'checked' : ''} class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4 cursor-pointer">
+                    </td>
+                    <td class="px-6 py-4 text-center font-medium text-gray-700">${user.nickname}</td>
+                    <td class="px-6 py-4 text-center text-gray-500 font-mono text-sm">${user.username}</td>
+                    <td class="px-6 py-4 text-center text-gray-500 font-mono text-xs">${user.createTime}</td>
+                    <td class="px-6 py-4 text-center text-gray-500 font-mono text-xs">${user.updateTime}</td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium ${roleStyles[user.role] || 'bg-gray-50 text-gray-600 border border-gray-200'}">
+                            ${user.role}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-center sticky right-0 bg-white group-hover:bg-gray-50 shadow-[-5px_0_5px_-5px_rgba(0,0,0,0.1)] transition-colors">
+                        <div class="flex items-center justify-center gap-2">
+                            <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-green-200 bg-green-50 text-green-600 hover:bg-green-100 transition-colors" title="编辑" onclick="openEditModal(${user.id})">
+                                <i class="far fa-edit"></i>
+                            </button>
+                            <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-orange-200 bg-orange-50 text-orange-600 hover:bg-orange-100 transition-colors" title="重置密码" onclick="showToast('密码已重置为默认密码: 123456', 'success')">
+                                <i class="fas fa-unlock-alt"></i>
+                            </button>
+                            <button onclick="openDeleteModal(${user.id})" class="w-8 h-8 flex items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 transition-colors" title="删除">
+                                <i class="far fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function renderPagination() {
+            const container = document.getElementById('pagination-container');
+            const totalItems = filteredUsers.length;
+            const totalPages = Math.ceil(totalItems / pageSize) || 1;
             
-            row.innerHTML = `
-                <td class="px-6 py-5 text-center">
-                    <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4 cursor-pointer">
-                </td>
-                <td class="px-6 py-5 text-center font-medium text-gray-700">${user.username}</td>
-                <td class="px-6 py-5 text-center text-gray-500 font-mono text-xs">${user.createTime}</td>
-                <td class="px-6 py-5 text-center text-gray-500 font-mono text-xs">${user.updateTime}</td>
-                <td class="px-6 py-5 text-center">
-                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${roleStyles[user.role]} shadow-sm">
-                        ${user.role}
-                    </span>
-                </td>
-                <td class="px-6 py-5 text-center">
-                    <div class="flex items-center justify-center gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
-                        <button class="flex items-center text-blue-600 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded text-xs font-medium transition-all gap-1" title="编辑">
-                            <i class="far fa-edit"></i> 编辑
+            let html = `
+                <div class="text-sm text-gray-600 font-medium">
+                    共 ${totalItems} 条
+                </div>
+                <div class="flex items-center space-x-3">
+                    <div class="relative group">
+                        <select onchange="handlePageSizeChange(this.value)" class="appearance-none bg-white border border-gray-300 text-gray-700 py-1.5 pl-3 pr-8 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-shadow">
+                            <option value="10" ${pageSize == 10 ? 'selected' : ''}>10条/页</option>
+                            <option value="20" ${pageSize == 20 ? 'selected' : ''}>20条/页</option>
+                            <option value="50" ${pageSize == 50 ? 'selected' : ''}>50条/页</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400 group-hover:text-blue-500 transition-colors">
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-1">
+                        <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="w-8 h-8 flex items-center justify-center rounded border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-chevron-left text-xs"></i>
                         </button>
-                        <button class="flex items-center text-amber-600 bg-amber-50 hover:bg-amber-100 px-2 py-1 rounded text-xs font-medium transition-all gap-1" title="重置密码">
-                            <i class="fas fa-lock"></i> 重置
+            `;
+
+            // Simple Pagination Logic for Demo
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    const isActive = i === currentPage;
+                    html += `
+                        <button onclick="changePage(${i})" class="w-8 h-8 flex items-center justify-center rounded border ${isActive ? 'border-blue-500 bg-blue-500 text-white font-medium shadow-sm' : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-colors'}">
+                            ${i}
                         </button>
-                        <button class="flex items-center text-purple-600 bg-purple-50 hover:bg-purple-100 px-2 py-1 rounded text-xs font-medium transition-all gap-1" title="分配角色">
-                            <i class="far fa-user"></i> 角色
-                        </button>
-                        <button class="flex items-center text-red-600 bg-red-50 hover:bg-red-100 px-2 py-1 rounded text-xs font-medium transition-all gap-1" title="删除">
-                            <i class="far fa-trash-alt"></i> 删除
+                    `;
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    html += `<span class="w-8 h-8 flex items-center justify-center text-gray-400">...</span>`;
+                }
+            }
+
+            html += `
+                        <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="w-8 h-8 flex items-center justify-center rounded border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-chevron-right text-xs"></i>
                         </button>
                     </div>
-                </td>
+                    
+                    <div class="flex items-center text-sm text-gray-600 ml-2">
+                        <span class="mr-2">跳至</span>
+                        <input type="number" min="1" max="${totalPages}" onchange="changePage(this.value)" class="w-10 h-8 border border-gray-300 rounded text-center focus:outline-none focus:ring-1 focus:ring-blue-500 mx-1 transition-shadow" value="${currentPage}">
+                        <span class="ml-1">页</span>
+                    </div>
+                </div>
             `;
-            tableBody.appendChild(row);
+            
+            container.innerHTML = html;
+        }
+
+        // --- Event Handlers ---
+
+        function handleSearch() {
+            const query = document.getElementById('search-username').value.toLowerCase().trim();
+            const role = selectedRoleFilter;
+            filteredUsers = users.filter(user => {
+                const matchUsername = user.username.toLowerCase().includes(query);
+                const matchRole = !role || role === '全部角色' || user.role === role;
+                return matchUsername && matchRole;
+            });
+            currentPage = 1;
+            selectedIds.clear();
+            renderTable();
+            renderPagination();
+            if (query) showToast('查询成功', 'success');
+        }
+
+        function handleReset() {
+            document.getElementById('search-username').value = '';
+            selectedRoleFilter = '全部角色';
+            roleFilterDropdown.selectOption('全部角色', false);
+            filteredUsers = [...users];
+            currentPage = 1;
+            selectedIds.clear();
+            renderTable();
+            renderPagination();
+            showToast('已重置筛选条件', 'info');
+        }
+
+        function handleRefresh() {
+            // Simulate refresh
+            const btn = document.querySelector('button[onclick="handleRefresh()"] i');
+            if(btn) btn.classList.add('fa-spin');
+            setTimeout(() => {
+                if(btn) btn.classList.remove('fa-spin');
+                handleSearch(); // Re-apply current filters
+                showToast('数据已刷新', 'success');
+            }, 500);
+        }
+
+        function changePage(page) {
+            const totalPages = Math.ceil(filteredUsers.length / pageSize) || 1;
+            page = parseInt(page);
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            renderTable();
+            renderPagination();
+        }
+
+        function handlePageSizeChange(size) {
+            pageSize = parseInt(size);
+            currentPage = 1;
+            renderTable();
+            renderPagination();
+        }
+
+        // --- Selection Logic ---
+
+        function toggleSelectAll() {
+            const checkbox = document.getElementById('select-all');
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            const pageData = filteredUsers.slice(start, end);
+
+            if (checkbox.checked) {
+                pageData.forEach(user => selectedIds.add(user.id));
+            } else {
+                pageData.forEach(user => selectedIds.delete(user.id));
+            }
+            renderTable();
+        }
+
+        function toggleSelection(id) {
+            if (selectedIds.has(id)) {
+                selectedIds.delete(id);
+            } else {
+                selectedIds.add(id);
+            }
+            renderTable();
+        }
+
+        // --- Delete Logic ---
+
+        function openDeleteModal(id) {
+            deleteIds = [id];
+            showDeleteModal();
+        }
+
+        function handleBatchDelete() {
+            if (selectedIds.size === 0) {
+                showToast('请先选择要删除的用户', 'error');
+                return;
+            }
+            deleteIds = Array.from(selectedIds);
+            showDeleteModal();
+        }
+
+        function showDeleteModal() {
+            const modal = document.getElementById('delete-modal');
+            const panel = document.getElementById('delete-modal-content');
+            modal.classList.remove('hidden');
+            // Trigger reflow
+            void modal.offsetWidth;
+            modal.classList.remove('opacity-0');
+            panel.classList.remove('scale-95');
+        }
+
+        function closeDeleteModal() {
+            const modal = document.getElementById('delete-modal');
+            const panel = document.getElementById('delete-modal-content');
+            modal.classList.add('opacity-0');
+            panel.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+            deleteIds = [];
+        }
+
+        function confirmDelete() {
+            if (deleteIds.length > 0) {
+                users = users.filter(u => !deleteIds.includes(u.id));
+                filteredUsers = filteredUsers.filter(u => !deleteIds.includes(u.id));
+                
+                // Clear selection of deleted items
+                deleteIds.forEach(id => selectedIds.delete(id));
+                
+                // Adjust page if empty
+                const totalPages = Math.ceil(filteredUsers.length / pageSize) || 1;
+                if (currentPage > totalPages) currentPage = totalPages;
+                
+                renderTable();
+                renderPagination();
+                showToast(`成功删除 ${deleteIds.length} 位用户`, 'success');
+                closeDeleteModal();
+            }
+        }
+
+        // --- Custom Dropdown Logic ---
+        function setupCustomDropdown(dropdownId, options, initialValue = '', onSelect) {
+            const container = document.getElementById(dropdownId + '-dropdown');
+            const btn = document.getElementById(dropdownId + '-btn');
+            const text = document.getElementById(dropdownId + '-text');
+            const menu = document.getElementById(dropdownId + '-options');
+            const input = document.getElementById(dropdownId);
+            const icon = btn.querySelector('i');
+
+            // Render options
+            menu.innerHTML = '';
+            options.forEach(opt => {
+                const div = document.createElement('div');
+                div.className = 'px-3 py-2 mx-1 my-0.5 rounded-md hover:bg-blue-50 hover:text-blue-600 cursor-pointer text-sm text-gray-700 transition-colors flex items-center justify-between group';
+                div.innerHTML = `
+                    <span>${opt}</span>
+                    <i class="fas fa-check text-blue-500 opacity-0 transition-opacity"></i>
+                `;
+                div.onclick = (e) => {
+                    e.stopPropagation();
+                    selectOption(opt);
+                };
+                menu.appendChild(div);
+            });
+
+            // Set initial value
+            if (initialValue) {
+                selectOption(initialValue, false);
+            }
+
+            function selectOption(value, close = true) {
+                input.value = value;
+                text.textContent = value;
+                text.className = 'text-gray-700';
+                
+                // Update checkmarks
+                Array.from(menu.children).forEach(child => {
+                    const span = child.querySelector('span');
+                    const check = child.querySelector('i');
+                    if (span.textContent === value) {
+                        check.classList.remove('opacity-0');
+                    } else {
+                        check.classList.add('opacity-0');
+                    }
+                });
+
+                if (close) closeDropdown();
+                if (typeof onSelect === 'function') onSelect(value);
+            }
+
+            function openDropdown() {
+                // Close other dropdowns first if needed
+                menu.classList.remove('hidden');
+                // Trigger reflow
+                void menu.offsetWidth;
+                menu.classList.remove('opacity-0', 'scale-95');
+                icon.classList.add('rotate-180');
+                btn.classList.add('ring-2', 'ring-blue-500', 'border-blue-500');
+            }
+
+            function closeDropdown() {
+                menu.classList.add('opacity-0', 'scale-95');
+                icon.classList.remove('rotate-180');
+                btn.classList.remove('ring-2', 'ring-blue-500', 'border-blue-500');
+                setTimeout(() => {
+                    menu.classList.add('hidden');
+                }, 200);
+            }
+
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                if (menu.classList.contains('hidden')) {
+                    openDropdown();
+                } else {
+                    closeDropdown();
+                }
+            };
+
+            // Close when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!container.contains(e.target)) {
+                    if (!menu.classList.contains('hidden')) {
+                        closeDropdown();
+                    }
+                }
+            });
+
+            return { selectOption };
+        }
+
+        // Initialize dropdowns
+        const roleOptions = ['教师', '管理员', '教务管理员', '超级管理员'];
+        const createRoleDropdown = setupCustomDropdown('create-role', roleOptions, '教师');
+        const editRoleDropdown = setupCustomDropdown('edit-role', roleOptions);
+        const roleFilterDropdown = setupCustomDropdown('role-filter', ['全部角色', ...roleOptions], '全部角色', (val) => {
+            selectedRoleFilter = val;
+            handleSearch();
+        });
+
+        // --- Create User Logic ---
+
+        function openCreateModal() {
+            document.getElementById('create-nickname').value = '';
+            document.getElementById('create-username').value = '';
+            createRoleDropdown.selectOption('教师', false); // Reset to default
+            
+            const modal = document.getElementById('create-modal');
+            const panel = document.getElementById('create-modal-content');
+            modal.classList.remove('hidden');
+            void modal.offsetWidth; // Trigger reflow
+            modal.classList.remove('opacity-0');
+            panel.classList.remove('scale-95');
+        }
+
+        function closeCreateModal() {
+            const modal = document.getElementById('create-modal');
+            const panel = document.getElementById('create-modal-content');
+            modal.classList.add('opacity-0');
+            panel.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+
+        function saveUser() {
+            const nickname = document.getElementById('create-nickname').value.trim();
+            const username = document.getElementById('create-username').value.trim();
+            const role = document.getElementById('create-role').value;
+
+            if (!nickname) {
+                showToast('请输入昵称', 'error');
+                return;
+            }
+            if (!username) {
+                showToast('请输入用户名', 'error');
+                return;
+            }
+
+            // Simple ID generation
+            const newId = Math.max(...users.map(u => u.id), 0) + 1;
+            const now = new Date();
+            const timeString = now.toISOString().replace('T', ' ').substring(0, 19);
+
+            const newUser = {
+                id: newId,
+                nickname: nickname,
+                username: username,
+                createTime: timeString,
+                updateTime: timeString,
+                role: role
+            };
+
+            users.unshift(newUser); // Add to top
+            handleSearch(); // Refresh list (and apply filters if any)
+            
+            showToast('用户创建成功', 'success');
+            closeCreateModal();
+        }
+
+        // --- Edit User Logic ---
+
+        function openEditModal(id) {
+            const user = users.find(u => u.id === id);
+            if (!user) return;
+
+            document.getElementById('edit-id').value = user.id;
+            document.getElementById('edit-nickname').value = user.nickname || '';
+            document.getElementById('edit-username').value = user.username;
+            editRoleDropdown.selectOption(user.role, false);
+
+            const modal = document.getElementById('edit-modal');
+            const panel = document.getElementById('edit-modal-content');
+            modal.classList.remove('hidden');
+            void modal.offsetWidth;
+            modal.classList.remove('opacity-0');
+            panel.classList.remove('scale-95');
+        }
+
+        function closeEditModal() {
+            const modal = document.getElementById('edit-modal');
+            const panel = document.getElementById('edit-modal-content');
+            modal.classList.add('opacity-0');
+            panel.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+
+        function updateUser() {
+            const id = parseInt(document.getElementById('edit-id').value);
+            const nickname = document.getElementById('edit-nickname').value.trim();
+            const username = document.getElementById('edit-username').value.trim();
+            const role = document.getElementById('edit-role').value;
+
+            if (!nickname) {
+                showToast('请输入昵称', 'error');
+                return;
+            }
+            if (!username) {
+                showToast('请输入用户名', 'error');
+                return;
+            }
+
+            const userIndex = users.findIndex(u => u.id === id);
+            if (userIndex === -1) {
+                showToast('用户不存在', 'error');
+                return;
+            }
+
+            const now = new Date();
+            const timeString = now.toISOString().replace('T', ' ').substring(0, 19);
+
+            users[userIndex].nickname = nickname;
+            users[userIndex].username = username;
+            users[userIndex].role = role;
+            users[userIndex].updateTime = timeString;
+
+            // Re-apply filter if needed, or just update the filtered list directly if it contains the user
+            const filterIndex = filteredUsers.findIndex(u => u.id === id);
+            if (filterIndex !== -1) {
+                filteredUsers[filterIndex] = users[userIndex];
+            }
+
+            renderTable();
+            showToast('用户更新成功', 'success');
+            closeEditModal();
+        }
+
+        // --- Toast Utility ---
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast-notification');
+            const iconContainer = document.getElementById('toast-icon-container');
+            const icon = document.getElementById('toast-icon');
+            const title = document.getElementById('toast-title');
+            const msg = document.getElementById('toast-message');
+
+            // Config based on type
+            const config = {
+                success: { icon: 'fa-check', iconBg: 'bg-green-100', iconColor: 'text-green-500', title: '操作成功', borderColor: 'border-green-100' },
+                error: { icon: 'fa-times', iconBg: 'bg-red-100', iconColor: 'text-red-500', title: '操作失败', borderColor: 'border-red-100' },
+                info: { icon: 'fa-info', iconBg: 'bg-blue-100', iconColor: 'text-blue-500', title: '提示', borderColor: 'border-blue-100' }
+            };
+
+            const conf = config[type] || config.success;
+
+            // Reset classes (keeping base classes)
+            toast.className = `fixed top-4 right-4 bg-white border shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-lg p-4 flex items-center gap-3 transform transition-transform duration-300 z-[100] ${conf.borderColor}`;
+            
+            // Update content
+            iconContainer.className = `w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${conf.iconBg} ${conf.iconColor}`;
+            icon.className = `fas ${conf.icon}`;
+            title.textContent = conf.title;
+            msg.textContent = message;
+
+            // Show
+            toast.classList.remove('translate-x-[120%]');
+            
+            // Hide after 3s
+            if (toast.timeoutId) clearTimeout(toast.timeoutId);
+            toast.timeoutId = setTimeout(() => {
+                toast.classList.add('translate-x-[120%]');
+            }, 3000);
+        }
+
+        // --- Init ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTable();
+            renderPagination();
         });
     </script>
 </body>

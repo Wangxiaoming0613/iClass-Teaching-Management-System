@@ -270,38 +270,24 @@
                     <!-- Filters -->
                     <div class="flex items-center gap-3">
                         <!-- Year Dropdown -->
-                        <div class="relative" id="dd-year">
-                            <button onclick="toggleDropdown('year', event)" class="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 py-2 px-4 rounded-lg text-sm hover:shadow-sm hover:border-blue-300 transition-all focus:outline-none w-40 justify-between group">
-                                <span id="label-year">2023-2024学年</span>
-                                <i class="fas fa-chevron-down text-xs text-gray-400 group-hover:text-blue-500 transition-transform duration-200" id="icon-year"></i>
+                        <div class="relative w-40" id="year-select-dropdown">
+                            <button id="year-select-btn" class="w-full bg-white border border-gray-200 text-gray-700 py-2 px-4 rounded-lg text-sm hover:shadow-sm hover:border-blue-300 transition-all focus:outline-none flex items-center justify-between group">
+                                <span id="year-select-value">全部学年</span>
+                                <i class="fas fa-chevron-down text-xs text-gray-400 group-hover:text-blue-500 transition-transform duration-200"></i>
                             </button>
-                            <div id="menu-year" class="hidden absolute top-full right-0 mt-2 w-full bg-white rounded-xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.1)] border border-gray-100 py-1.5 z-20 transform origin-top transition-all duration-200 opacity-0 scale-95">
-                                <div onclick="selectFilter('year', '2023-2024', '2023-2024学年')" class="px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors flex items-center justify-between group/item">
-                                    <span>2023-2024学年</span>
-                                    <i class="fas fa-check text-blue-500 opacity-0 group-hover/item:opacity-100 transition-opacity text-xs"></i>
-                                </div>
-                                <div onclick="selectFilter('year', '2022-2023', '2022-2023学年')" class="px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors flex items-center justify-between group/item">
-                                    <span>2022-2023学年</span>
-                                    <i class="fas fa-check text-blue-500 opacity-0 group-hover/item:opacity-100 transition-opacity text-xs"></i>
-                                </div>
+                            <div id="year-select-options" class="hidden absolute top-full right-0 mt-2 w-full bg-white rounded-xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.1)] border border-gray-100 py-1.5 z-20 transform origin-top transition-all duration-200 opacity-0 scale-95">
+                                <!-- Options injected by JS -->
                             </div>
                         </div>
 
                         <!-- Semester Dropdown -->
-                        <div class="relative" id="dd-semester">
-                            <button onclick="toggleDropdown('semester', event)" class="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 py-2 px-4 rounded-lg text-sm hover:shadow-sm hover:border-blue-300 transition-all focus:outline-none w-32 justify-between group">
-                                <span id="label-semester">第一学期</span>
-                                <i class="fas fa-chevron-down text-xs text-gray-400 group-hover:text-blue-500 transition-transform duration-200" id="icon-semester"></i>
+                        <div class="relative w-32" id="semester-select-dropdown">
+                            <button id="semester-select-btn" class="w-full bg-white border border-gray-200 text-gray-700 py-2 px-4 rounded-lg text-sm hover:shadow-sm hover:border-blue-300 transition-all focus:outline-none flex items-center justify-between group">
+                                <span id="semester-select-value">全部学期</span>
+                                <i class="fas fa-chevron-down text-xs text-gray-400 group-hover:text-blue-500 transition-transform duration-200"></i>
                             </button>
-                            <div id="menu-semester" class="hidden absolute top-full right-0 mt-2 w-full bg-white rounded-xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.1)] border border-gray-100 py-1.5 z-20 transform origin-top transition-all duration-200 opacity-0 scale-95">
-                                <div onclick="selectFilter('semester', '第一学期', '第一学期')" class="px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors flex items-center justify-between group/item">
-                                    <span>第一学期</span>
-                                    <i class="fas fa-check text-blue-500 opacity-0 group-hover/item:opacity-100 transition-opacity text-xs"></i>
-                                </div>
-                                <div onclick="selectFilter('semester', '第二学期', '第二学期')" class="px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors flex items-center justify-between group/item">
-                                    <span>第二学期</span>
-                                    <i class="fas fa-check text-blue-500 opacity-0 group-hover/item:opacity-100 transition-opacity text-xs"></i>
-                                </div>
+                            <div id="semester-select-options" class="hidden absolute top-full right-0 mt-2 w-full bg-white rounded-xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.1)] border border-gray-100 py-1.5 z-20 transform origin-top transition-all duration-200 opacity-0 scale-95">
+                                <!-- Options injected by JS -->
                             </div>
                         </div>
                     </div>
@@ -547,71 +533,138 @@
         let currentPage = 1;
         let pageSize = 6;
         let filteredCourses = [];
-        let currentYear = "2023-2024";
-        let currentSemester = "第一学期";
+        let currentYear = '';
+        let currentSemester = '';
 
-        // Dropdown Logic
-        function toggleDropdown(type, event) {
-            event.stopPropagation();
-            const menu = document.getElementById(`menu-${type}`);
-            const icon = document.getElementById(`icon-${type}`);
+        // --- Filter Dropdown Logic ---
+        function setupFilterDropdown(id, options, defaultLabel = '全部...') {
+            const container = document.getElementById(`${id}-dropdown`);
+            const btn = document.getElementById(`${id}-btn`);
+            const optionsContainer = document.getElementById(`${id}-options`);
+            const valueDisplay = document.getElementById(`${id}-value`);
+            const chevron = btn.querySelector('.fa-chevron-down');
             
-            // Close other dropdowns
-            ['year', 'semester'].forEach(t => {
-                if (t !== type) {
-                    const otherMenu = document.getElementById(`menu-${t}`);
-                    const otherIcon = document.getElementById(`icon-${t}`);
-                    if (!otherMenu.classList.contains('hidden')) {
-                        closeDropdown(t);
+            let selectedValue = '';
+
+            // Render options
+            function renderOptions() {
+                optionsContainer.innerHTML = options.map(opt => `
+                    <div class="px-4 py-2.5 hover:bg-blue-50 cursor-pointer text-sm text-gray-700 transition-colors flex justify-between items-center group" 
+                         data-value="${opt.value}">
+                        <span class="${opt.value === selectedValue ? 'text-blue-600 font-medium' : 'group-hover:text-blue-600'}">${opt.label}</span>
+                        ${opt.value === selectedValue ? '<i class="fas fa-check text-blue-600 text-xs"></i>' : ''}
+                    </div>
+                `).join('');
+
+                // Add click listeners to options
+                optionsContainer.querySelectorAll('div[data-value]').forEach(el => {
+                    el.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const value = el.dataset.value;
+                        const label = el.querySelector('span').textContent;
+                        selectOption(value, label);
+                    });
+                });
+            }
+
+            function selectOption(value, label) {
+                selectedValue = value;
+                valueDisplay.textContent = label;
+                valueDisplay.classList.toggle('text-gray-500', !value);
+                valueDisplay.classList.toggle('text-gray-700', !!value);
+                
+                closeDropdown();
+                renderOptions(); // Re-render to update checkmark
+                
+                // Trigger callback
+                if (instance.onSelect) instance.onSelect(value);
+            }
+
+            function toggleDropdown(e) {
+                e.stopPropagation();
+                const isHidden = optionsContainer.classList.contains('hidden');
+                
+                // Close all other dropdowns first
+                document.querySelectorAll('[id$="-select-options"]').forEach(el => {
+                    if (el.id !== `${id}-options`) {
+                        el.classList.add('hidden', 'opacity-0', 'scale-95');
+                        // Reset other chevrons
+                        const otherBtn = document.getElementById(el.id.replace('-options', '-btn'));
+                        if (otherBtn) {
+                            const otherChevron = otherBtn.querySelector('.fa-chevron-down');
+                            if (otherChevron) otherChevron.classList.remove('rotate-180');
+                        }
                     }
+                });
+
+                if (isHidden) {
+                    optionsContainer.classList.remove('hidden');
+                    // Small delay to allow transition
+                    requestAnimationFrame(() => {
+                        optionsContainer.classList.remove('opacity-0', 'scale-95');
+                        chevron.classList.add('rotate-180');
+                    });
+                } else {
+                    closeDropdown();
+                }
+            }
+
+            function closeDropdown() {
+                optionsContainer.classList.add('opacity-0', 'scale-95');
+                chevron.classList.remove('rotate-180');
+                setTimeout(() => {
+                    optionsContainer.classList.add('hidden');
+                }, 200);
+            }
+
+            // Event Listeners
+            btn.addEventListener('click', toggleDropdown);
+
+            // Close when clicking outside - strictly inside the component to avoid global conflicts
+            document.addEventListener('click', (e) => {
+                if (!container.contains(e.target)) {
+                    closeDropdown();
                 }
             });
 
-            if (menu.classList.contains('hidden')) {
-                menu.classList.remove('hidden');
-                setTimeout(() => {
-                    menu.classList.remove('opacity-0', 'scale-95');
-                    icon.classList.add('rotate-180');
-                }, 10);
-            } else {
-                closeDropdown(type);
-            }
+            // Initial render
+            renderOptions();
+
+            const instance = {
+                selectOption,
+                updateOptions: (newOptions) => {
+                    options = newOptions;
+                    renderOptions();
+                },
+                onSelect: null,
+                getValue: () => selectedValue
+            };
+
+            return instance;
         }
 
-        function closeDropdown(type) {
-            const menu = document.getElementById(`menu-${type}`);
-            const icon = document.getElementById(`icon-${type}`);
-            menu.classList.add('opacity-0', 'scale-95');
-            icon.classList.remove('rotate-180');
-            setTimeout(() => {
-                menu.classList.add('hidden');
-            }, 200);
-        }
+        // Init Dropdowns
+        const yearDropdown = setupFilterDropdown('year-select', [
+            { value: '', label: '全部学年' },
+            { value: '2023-2024', label: '2023-2024学年' },
+            { value: '2022-2023', label: '2022-2023学年' }
+        ], '全部学年');
 
-        function selectFilter(type, value, label) {
-            if (type === 'year') currentYear = value;
-            if (type === 'semester') currentSemester = value;
-            
-            document.getElementById(`label-${type}`).textContent = label;
-            closeDropdown(type);
-            
-            // Update UI active state logic could go here
-            // Re-rendering dropdowns to show checkmarks would be ideal but optional for now
-            
+        yearDropdown.onSelect = (val) => {
+            currentYear = val;
             handleFilterChange();
-        }
+        };
 
-        // Close dropdowns when clicking outside
-        window.onclick = function(event) {
-            if (!event.target.closest('.relative')) {
-                ['year', 'semester'].forEach(type => {
-                    const menu = document.getElementById(`menu-${type}`);
-                    if (menu && !menu.classList.contains('hidden')) {
-                        closeDropdown(type);
-                    }
-                });
-            }
-        }
+        const semesterDropdown = setupFilterDropdown('semester-select', [
+            { value: '', label: '全部学期' },
+            { value: '第一学期', label: '第一学期' },
+            { value: '第二学期', label: '第二学期' }
+        ], '全部学期');
+
+        semesterDropdown.onSelect = (val) => {
+            currentSemester = val;
+            handleFilterChange();
+        };
 
         function handleFilterChange() {
             currentPage = 1;
@@ -638,7 +691,10 @@
             const tbody = document.getElementById('course-list-body');
             
             // Filter
-            filteredCourses = allCourses.filter(c => c.year === currentYear && c.semester === currentSemester);
+            filteredCourses = allCourses.filter(c => 
+                (currentYear === '' || c.year === currentYear) && 
+                (currentSemester === '' || c.semester === currentSemester)
+            );
 
             // Update Stats
             document.getElementById('stat-course-count').textContent = filteredCourses.length;

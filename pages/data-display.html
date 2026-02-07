@@ -133,50 +133,32 @@
         <div class="flex flex-wrap items-center justify-between mb-3 gap-4 shrink-0">
             <div class="flex flex-wrap items-center gap-3 flex-1">
                 <!-- Academic Year -->
-                <div class="custom-select relative w-40" id="filter-year-container">
-                    <button class="select-trigger w-full bg-white border border-gray-300 text-gray-700 py-2 pl-4 pr-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-left flex items-center justify-between transition-shadow group">
-                        <span class="selected-text truncate">全部学年</span>
+                <div class="relative w-40" id="filter-year-dropdown">
+                    <button id="filter-year-btn" class="w-full bg-white border border-gray-300 text-gray-700 py-2 pl-4 pr-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-left flex items-center justify-between transition-shadow group">
+                        <span id="filter-year-text" class="truncate">全部学年</span>
                         <i class="fas fa-chevron-down text-xs text-gray-400 group-hover:text-blue-500 transition-colors"></i>
                     </button>
-                    <div class="options-list absolute top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 hidden max-h-60 overflow-y-auto">
-                        <div class="option-item px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors" data-value="">全部学年</div>
-                        <div class="option-item px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors" data-value="2024-2025">2024-2025</div>
-                        <div class="option-item px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors" data-value="2023-2024">2023-2024</div>
-                        <div class="option-item px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors" data-value="2022-2023">2022-2023</div>
-                    </div>
+                    <div id="filter-year-options" class="absolute top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 hidden max-h-60 overflow-y-auto custom-scrollbar opacity-0 transform scale-95 transition-all duration-200 origin-top"></div>
                     <input type="hidden" id="filter-year" value="">
                 </div>
 
                 <!-- Semester -->
-                <div class="custom-select relative w-40" id="filter-semester-container">
-                    <button class="select-trigger w-full bg-white border border-gray-300 text-gray-700 py-2 pl-4 pr-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-left flex items-center justify-between transition-shadow group">
-                        <span class="selected-text truncate">全部学期</span>
+                <div class="relative w-40" id="filter-semester-dropdown">
+                    <button id="filter-semester-btn" class="w-full bg-white border border-gray-300 text-gray-700 py-2 pl-4 pr-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-left flex items-center justify-between transition-shadow group">
+                        <span id="filter-semester-text" class="truncate">全部学期</span>
                         <i class="fas fa-chevron-down text-xs text-gray-400 group-hover:text-blue-500 transition-colors"></i>
                     </button>
-                    <div class="options-list absolute top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 hidden max-h-60 overflow-y-auto">
-                        <div class="option-item px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors" data-value="">全部学期</div>
-                        <div class="option-item px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors" data-value="春季学期">春季学期</div>
-                        <div class="option-item px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors" data-value="秋季学期">秋季学期</div>
-                    </div>
+                    <div id="filter-semester-options" class="absolute top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 hidden max-h-60 overflow-y-auto custom-scrollbar opacity-0 transform scale-95 transition-all duration-200 origin-top"></div>
                     <input type="hidden" id="filter-semester" value="">
                 </div>
 
                 <!-- College -->
-                <div class="custom-select relative w-44" id="filter-college-container">
-                    <button class="select-trigger w-full bg-white border border-gray-300 text-gray-700 py-2 pl-4 pr-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-left flex items-center justify-between transition-shadow group">
-                        <span class="selected-text truncate">全部学院</span>
+                <div class="relative w-44" id="filter-college-dropdown">
+                    <button id="filter-college-btn" class="w-full bg-white border border-gray-300 text-gray-700 py-2 pl-4 pr-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-left flex items-center justify-between transition-shadow group">
+                        <span id="filter-college-text" class="truncate">全部学院</span>
                         <i class="fas fa-chevron-down text-xs text-gray-400 group-hover:text-blue-500 transition-colors"></i>
                     </button>
-                    <div class="options-list absolute top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 hidden max-h-60 overflow-y-auto">
-                        <div class="option-item px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors" data-value="">全部学院</div>
-                        <div class="option-item px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors" data-value="电子电气工程学院">电子电气工程学院</div>
-                        <div class="option-item px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors" data-value="马克思主义学院">马克思主义学院</div>
-                        <div class="option-item px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors" data-value="工商管理学院">工商管理学院</div>
-                        <div class="option-item px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors" data-value="外国语学院">外国语学院</div>
-                        <div class="option-item px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors" data-value="化学化工学院">化学化工学院</div>
-                        <div class="option-item px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors" data-value="艺术设计学院">艺术设计学院</div>
-                        <div class="option-item px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors" data-value="城市轨道交通学院">城市轨道交通学院</div>
-                    </div>
+                    <div id="filter-college-options" class="absolute top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 hidden max-h-60 overflow-y-auto custom-scrollbar opacity-0 transform scale-95 transition-all duration-200 origin-top"></div>
                     <input type="hidden" id="filter-college" value="">
                 </div>
 
@@ -328,57 +310,123 @@
             const btnSearch = document.getElementById('btn-search');
             const btnReset = document.getElementById('btn-reset');
 
-            // --- Custom Select Logic ---
-            const setupCustomSelects = () => {
-                const selects = document.querySelectorAll('.custom-select');
-                
-                // Close all selects when clicking outside
+            // --- Custom Dropdown Logic ---
+            function setupCustomDropdown(dropdownId, options, initialValue = '') {
+                const container = document.getElementById(dropdownId + '-dropdown');
+                const btn = document.getElementById(dropdownId + '-btn');
+                const text = document.getElementById(dropdownId + '-text');
+                const menu = document.getElementById(dropdownId + '-options');
+                const input = document.getElementById(dropdownId);
+                const icon = btn.querySelector('i');
+
+                // Render options
+                menu.innerHTML = '';
+                options.forEach(opt => {
+                    const value = typeof opt === 'object' ? opt.value : opt;
+                    const label = typeof opt === 'object' ? opt.label : opt;
+                    
+                    const div = document.createElement('div');
+                    div.className = 'px-3 py-2 mx-1 my-0.5 rounded-md hover:bg-blue-50 hover:text-blue-600 cursor-pointer text-sm text-gray-700 transition-colors flex items-center justify-between group';
+                    div.innerHTML = `
+                        <span>${label}</span>
+                        <i class="fas fa-check text-blue-500 opacity-0 transition-opacity"></i>
+                    `;
+                    div.onclick = (e) => {
+                        e.stopPropagation();
+                        selectOption(value, label);
+                    };
+                    menu.appendChild(div);
+                });
+
+                function selectOption(value, label, close = true) {
+                    input.value = value;
+                    text.textContent = label;
+                    text.className = 'text-gray-700 truncate';
+                    
+                    // Update checkmarks
+                    Array.from(menu.children).forEach(child => {
+                        const span = child.querySelector('span');
+                        const check = child.querySelector('i');
+                        if (span.textContent === label) {
+                            check.classList.remove('opacity-0');
+                        } else {
+                            check.classList.add('opacity-0');
+                        }
+                    });
+
+                    if (close) closeDropdown();
+                }
+
+                function openDropdown() {
+                    // Close other dropdowns
+                    document.querySelectorAll('[id$="-options"]').forEach(el => {
+                        if (el !== menu && !el.classList.contains('hidden')) {
+                             const otherId = el.id.replace('-options', '');
+                             const otherBtn = document.getElementById(otherId + '-btn');
+                             const otherIcon = otherBtn.querySelector('i');
+                             
+                             el.classList.add('opacity-0', 'scale-95');
+                             if (otherIcon) otherIcon.classList.remove('rotate-180');
+                             if (otherBtn) otherBtn.classList.remove('ring-2', 'ring-blue-500', 'border-blue-500');
+                             setTimeout(() => {
+                                 el.classList.add('hidden');
+                             }, 200);
+                        }
+                    });
+
+                    menu.classList.remove('hidden');
+                    void menu.offsetWidth;
+                    menu.classList.remove('opacity-0', 'scale-95');
+                    icon.classList.add('rotate-180');
+                    btn.classList.add('ring-2', 'ring-blue-500', 'border-blue-500');
+                }
+
+                function closeDropdown() {
+                    menu.classList.add('opacity-0', 'scale-95');
+                    icon.classList.remove('rotate-180');
+                    btn.classList.remove('ring-2', 'ring-blue-500', 'border-blue-500');
+                    setTimeout(() => {
+                        menu.classList.add('hidden');
+                    }, 200);
+                }
+
+                // Initial selection
+                if (initialValue !== undefined) {
+                     const initialOpt = options.find(o => (typeof o === 'object' ? o.value : o) === initialValue);
+                     if (initialOpt) {
+                         const label = typeof initialOpt === 'object' ? initialOpt.label : initialOpt;
+                         selectOption(initialValue, label, false);
+                     }
+                }
+
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    if (menu.classList.contains('hidden')) {
+                        openDropdown();
+                    } else {
+                        closeDropdown();
+                    }
+                };
+
                 document.addEventListener('click', (e) => {
-                    if (!e.target.closest('.custom-select')) {
-                        document.querySelectorAll('.options-list').forEach(list => {
-                            list.classList.add('hidden');
-                        });
+                    if (!container.contains(e.target)) {
+                        if (!menu.classList.contains('hidden')) {
+                            closeDropdown();
+                        }
                     }
                 });
 
-                selects.forEach(select => {
-                    const trigger = select.querySelector('.select-trigger');
-                    const list = select.querySelector('.options-list');
-                    const hiddenInput = select.querySelector('input[type="hidden"]');
-                    const selectedText = select.querySelector('.selected-text');
-                    const options = select.querySelectorAll('.option-item');
-
-                    // Toggle list
-                    trigger.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        // Close other lists first
-                        document.querySelectorAll('.options-list').forEach(l => {
-                            if (l !== list) l.classList.add('hidden');
-                        });
-                        list.classList.toggle('hidden');
-                    });
-
-                    // Select option
-                    options.forEach(option => {
-                        option.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            const value = option.dataset.value;
-                            const text = option.textContent;
-                            
-                            hiddenInput.value = value;
-                            selectedText.textContent = text;
-                            
-                            // Highlight selected
-                            options.forEach(o => o.classList.remove('bg-blue-50', 'text-blue-600'));
-                            option.classList.add('bg-blue-50', 'text-blue-600');
-                            
-                            list.classList.add('hidden');
-                        });
-                    });
-                });
-            };
+                return { selectOption };
+            }
             
-            setupCustomSelects();
+            // Initialize Dropdowns
+            const yearOptions = [{value: '', label: '全部学年'}, ...years.map(y => ({value: y, label: y}))];
+            const semesterOptions = [{value: '', label: '全部学期'}, ...semesters.map(s => ({value: s, label: s}))];
+            const collegeOptions = [{value: '', label: '全部学院'}, ...colleges.map(c => ({value: c, label: c}))];
+            
+            const yearDropdown = setupCustomDropdown('filter-year', yearOptions, '');
+            const semesterDropdown = setupCustomDropdown('filter-semester', semesterOptions, '');
+            const collegeDropdown = setupCustomDropdown('filter-college', collegeOptions, '');
 
             // --- Rendering ---
             const renderTable = () => {
@@ -527,19 +575,11 @@
             btnSearch.addEventListener('click', filterData);
             
             btnReset.addEventListener('click', () => {
-                // Reset hidden inputs
-                filterYear.value = '';
-                filterSemester.value = '';
-                filterCollege.value = '';
+                // Reset hidden inputs via dropdown API
+                yearDropdown.selectOption('', '全部学年');
+                semesterDropdown.selectOption('', '全部学期');
+                collegeDropdown.selectOption('', '全部学院');
                 searchTeacher.value = '';
-                
-                // Reset UI texts
-                document.querySelector('#filter-year-container .selected-text').textContent = '全部学年';
-                document.querySelector('#filter-semester-container .selected-text').textContent = '全部学期';
-                document.querySelector('#filter-college-container .selected-text').textContent = '全部学院';
-                
-                // Reset highlights
-                document.querySelectorAll('.option-item').forEach(o => o.classList.remove('bg-blue-50', 'text-blue-600'));
                 
                 filterData();
             });

@@ -124,16 +124,30 @@
                 <!-- KB -->
                 <div class="flex items-center">
                     <label class="w-24 text-right text-sm font-bold text-gray-700 mr-4 shrink-0"><span class="text-red-500 mr-1">*</span>对应知识库</label>
-                    <select id="modal-kb" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm bg-white">
-                        <!-- Options -->
-                    </select>
+                    <div class="flex-1 relative" id="modal-kb-dropdown">
+                        <button type="button" id="modal-kb-btn" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-left text-sm flex items-center justify-between hover:border-blue-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                            <span id="modal-kb-text" class="text-gray-500">请选择知识库</span>
+                            <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform duration-200"></i>
+                        </button>
+                        <div id="modal-kb-options" class="hidden absolute top-full left-0 right-0 mt-1 bg-white border border-gray-100 rounded-lg shadow-lg z-50 py-1 max-h-48 overflow-y-auto opacity-0 scale-95 transform origin-top transition-all duration-200">
+                            <!-- Options will be populated by JS -->
+                        </div>
+                        <input type="hidden" id="modal-kb">
+                    </div>
                 </div>
                 <!-- Model -->
                 <div class="flex items-center">
                     <label class="w-24 text-right text-sm font-bold text-gray-700 mr-4 shrink-0"><span class="text-red-500 mr-1">*</span>模型</label>
-                    <select id="modal-model" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm bg-white">
-                        <!-- Options -->
-                    </select>
+                    <div class="flex-1 relative" id="modal-model-dropdown">
+                        <button type="button" id="modal-model-btn" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-left text-sm flex items-center justify-between hover:border-blue-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                            <span id="modal-model-text" class="text-gray-500">请选择模型</span>
+                            <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform duration-200"></i>
+                        </button>
+                        <div id="modal-model-options" class="hidden absolute top-full left-0 right-0 mt-1 bg-white border border-gray-100 rounded-lg shadow-lg z-50 py-1 max-h-48 overflow-y-auto opacity-0 scale-95 transform origin-top transition-all duration-200">
+                            <!-- Options will be populated by JS -->
+                        </div>
+                        <input type="hidden" id="modal-model">
+                    </div>
                 </div>
                 <!-- Toggles -->
                 <div class="flex items-center">
@@ -387,28 +401,116 @@
         }
 
         // --- Modal & CRUD Logic ---
+
+        // --- Custom Dropdown Logic ---
+        function setupCustomDropdown(dropdownId, options, initialValue = '') {
+            const container = document.getElementById(dropdownId + '-dropdown');
+            const btn = document.getElementById(dropdownId + '-btn');
+            const text = document.getElementById(dropdownId + '-text');
+            const menu = document.getElementById(dropdownId + '-options');
+            const input = document.getElementById(dropdownId);
+            const icon = btn.querySelector('i');
+
+            function renderOptions(opts) {
+                menu.innerHTML = '';
+                opts.forEach(opt => {
+                    const div = document.createElement('div');
+                    div.className = 'px-3 py-2 mx-1 my-0.5 rounded-md hover:bg-blue-50 hover:text-blue-600 cursor-pointer text-sm text-gray-700 transition-colors flex items-center justify-between group';
+                    div.innerHTML = `
+                        <span>${opt}</span>
+                        <i class="fas fa-check text-blue-500 opacity-0 transition-opacity"></i>
+                    `;
+                    div.onclick = (e) => {
+                        e.stopPropagation();
+                        selectOption(opt);
+                    };
+                    menu.appendChild(div);
+                });
+            }
+
+            // Initial render
+            renderOptions(options);
+
+            // Set initial value
+            if (initialValue) {
+                selectOption(initialValue, false);
+            }
+
+            function selectOption(value, close = true) {
+                input.value = value;
+                const defaultText = dropdownId === 'modal-kb' ? '请选择知识库' : '请选择模型';
+                text.textContent = value || defaultText;
+                text.className = value ? 'text-gray-700' : 'text-gray-500';
+                
+                // Update checkmarks
+                Array.from(menu.children).forEach(child => {
+                    const span = child.querySelector('span');
+                    const check = child.querySelector('i');
+                    if (span.textContent === value) {
+                        check.classList.remove('opacity-0');
+                    } else {
+                        check.classList.add('opacity-0');
+                    }
+                });
+
+                if (close) closeDropdown();
+            }
+
+            function openDropdown() {
+                menu.classList.remove('hidden');
+                void menu.offsetWidth;
+                menu.classList.remove('opacity-0', 'scale-95');
+                icon.classList.add('rotate-180');
+                btn.classList.add('ring-2', 'ring-blue-500', 'border-blue-500');
+            }
+
+            function closeDropdown() {
+                menu.classList.add('opacity-0', 'scale-95');
+                icon.classList.remove('rotate-180');
+                btn.classList.remove('ring-2', 'ring-blue-500', 'border-blue-500');
+                setTimeout(() => {
+                    menu.classList.add('hidden');
+                }, 200);
+            }
+
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                if (menu.classList.contains('hidden')) {
+                    openDropdown();
+                } else {
+                    closeDropdown();
+                }
+            };
+
+            // Close when clicking outside
+            document.addEventListener('click', (e) => {
+                if (container && !container.contains(e.target)) {
+                    if (!menu.classList.contains('hidden')) {
+                        closeDropdown();
+                    }
+                }
+            });
+
+            return { selectOption, updateOptions: renderOptions };
+        }
+
+        let kbDropdown, modelDropdown;
+
         function populateDropdowns() {
-            const kbSelect = document.getElementById('modal-kb');
-            const modelSelect = document.getElementById('modal-model');
-            
             // Use unique KBs from initial data + default list
             const uniqueKBs = [...new Set([...kbs, ...courses.map(c => c.kb)])];
+            
+            if (!kbDropdown) {
+                kbDropdown = setupCustomDropdown('modal-kb', uniqueKBs);
+            } else {
+                kbDropdown.updateOptions(uniqueKBs);
+            }
 
-            kbSelect.innerHTML = '<option value="">请选择知识库</option>';
-            uniqueKBs.forEach(kb => {
-                const opt = document.createElement('option');
-                opt.value = kb;
-                opt.textContent = kb;
-                kbSelect.appendChild(opt);
-            });
-
-            modelSelect.innerHTML = '<option value="">请选择模型</option>';
-            models.forEach(model => {
-                const opt = document.createElement('option');
-                opt.value = model;
-                opt.textContent = model;
-                modelSelect.appendChild(opt);
-            });
+            if (!modelDropdown) {
+                modelDropdown = setupCustomDropdown('modal-model', models);
+            } else {
+                modelDropdown.updateOptions(models);
+            }
         }
 
         function openAddModal() {
@@ -419,13 +521,15 @@
             // Reset fields
             document.getElementById('modal-code').value = '';
             document.getElementById('modal-name').value = '';
-            document.getElementById('modal-kb').value = '';
-            document.getElementById('modal-model').value = '';
             document.getElementById('modal-gpt').checked = true;
             document.getElementById('modal-quiz').checked = true;
 
-            resetValidation();
             populateDropdowns();
+            // Reset dropdowns
+            kbDropdown.selectOption('', false);
+            modelDropdown.selectOption('', false);
+
+            resetValidation();
             showModal(modal, modalContent);
         }
 
@@ -439,8 +543,9 @@
             document.getElementById('modal-name').value = item.name;
             
             populateDropdowns();
-            document.getElementById('modal-kb').value = item.kb;
-            document.getElementById('modal-model').value = item.model;
+            // Set dropdown values
+            kbDropdown.selectOption(item.kb, false);
+            modelDropdown.selectOption(item.model, false);
             
             document.getElementById('modal-gpt').checked = item.allowGPT;
             document.getElementById('modal-quiz').checked = item.allowQuiz;
@@ -450,9 +555,16 @@
         }
 
         function resetValidation() {
-            ['modal-code', 'modal-name', 'modal-kb', 'modal-model'].forEach(id => {
-                document.getElementById(id).classList.remove('border-red-500', 'ring-2', 'ring-red-200');
-                document.getElementById(id).classList.add('border-gray-300');
+            ['modal-code', 'modal-name'].forEach(id => {
+                const el = document.getElementById(id);
+                el.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+                el.classList.add('border-gray-300');
+            });
+            
+            ['modal-kb', 'modal-model'].forEach(id => {
+                const btn = document.getElementById(id + '-btn');
+                btn.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+                btn.classList.add('border-gray-300');
             });
         }
 
@@ -480,7 +592,9 @@
             const allowQuiz = document.getElementById('modal-quiz').checked;
 
             let isValid = true;
-            [code, name, kb, model].forEach(input => {
+            
+            // Validate Inputs
+            [code, name].forEach(input => {
                 if (!input.value.trim()) {
                     isValid = false;
                     input.classList.remove('border-gray-300');
@@ -488,6 +602,19 @@
                 } else {
                     input.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
                     input.classList.add('border-gray-300');
+                }
+            });
+
+            // Validate Dropdowns
+            [kb, model].forEach(input => {
+                const btn = document.getElementById(input.id + '-btn');
+                if (!input.value.trim()) {
+                    isValid = false;
+                    btn.classList.remove('border-gray-300');
+                    btn.classList.add('border-red-500', 'ring-2', 'ring-red-200');
+                } else {
+                    btn.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+                    btn.classList.add('border-gray-300');
                 }
             });
 

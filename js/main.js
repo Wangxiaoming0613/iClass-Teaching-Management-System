@@ -5,6 +5,8 @@ const iframeContainer = document.getElementById('iframe-container');
 const breadcrumbContainer = document.getElementById('breadcrumb-container');
 const tagsContainer = document.getElementById('tags-view-container');
 const fullscreenBtn = document.getElementById('fullscreen-btn');
+const userMenu = document.getElementById('user-menu');
+const userMenuDropdown = document.getElementById('user-menu-dropdown');
 
 // 侧边栏状态
 let isCollapsed = false;
@@ -219,6 +221,19 @@ fullscreenBtn.addEventListener('click', () => {
         }
     }
 });
+
+if (userMenu && userMenuDropdown) {
+    userMenu.addEventListener('click', (e) => {
+        e.stopPropagation();
+        userMenuDropdown.classList.toggle('hidden');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!userMenu.contains(e.target)) {
+            userMenuDropdown.classList.add('hidden');
+        }
+    });
+}
 
 // 初始化：打开首页
 document.addEventListener('DOMContentLoaded', () => {
