@@ -87,25 +87,37 @@ window.openPage = function(path, title) {
 
     // 2. 处理 Iframe (显示/隐藏/创建)
     const existingIframe = document.querySelector(`iframe[data-path="${path}"]`);
-    const allIframes = document.querySelectorAll('#iframe-container iframe');
-    
-    // 隐藏所有 iframe
-    allIframes.forEach(iframe => {
-        iframe.style.display = 'none';
-    });
+    const activeIframe = document.querySelector('#iframe-container iframe.iframe-active');
+
+    if (activeIframe && activeIframe.dataset.path !== path) {
+        activeIframe.classList.remove('iframe-enter-right');
+        activeIframe.classList.add('iframe-exit-left');
+        activeIframe.classList.remove('iframe-active');
+        setTimeout(() => {
+            activeIframe.style.display = 'none';
+            activeIframe.classList.remove('iframe-exit-left');
+        }, 240);
+    }
 
     if (existingIframe) {
         existingIframe.style.display = 'block';
+        existingIframe.classList.remove('iframe-exit-left');
+        existingIframe.classList.add('iframe-enter-right', 'iframe-active');
+        existingIframe.addEventListener('animationend', () => {
+            existingIframe.classList.remove('iframe-enter-right');
+        }, { once: true });
     } else {
         const iframe = document.createElement('iframe');
         iframe.src = path;
         iframe.setAttribute('data-path', path);
         iframe.className = 'w-full h-full border-none rounded-lg shadow-sm bg-white/50 backdrop-blur-sm transition-all duration-300';
-        
-        // 监听 load 事件更新面包屑（可选，防止内部跳转导致面包屑不一致）
-        // 但由于我们主要控制外层，这里暂时依赖 openPage 调用更新面包屑
-        
+
         iframeContainer.appendChild(iframe);
+        iframe.style.display = 'block';
+        iframe.classList.add('iframe-enter-right', 'iframe-active');
+        iframe.addEventListener('animationend', () => {
+            iframe.classList.remove('iframe-enter-right');
+        }, { once: true });
     }
 
     // 3. 更新 UI

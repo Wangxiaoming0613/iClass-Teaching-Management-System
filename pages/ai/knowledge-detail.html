@@ -50,6 +50,203 @@
         .form-input:focus {
             box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
         }
+
+        #upload-progress-window {
+            will-change: transform;
+            transition: width 260ms cubic-bezier(0.16, 1, 0.3, 1), height 260ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 200ms ease, opacity 200ms ease, transform 260ms cubic-bezier(0.16, 1, 0.3, 1), background-color 200ms ease;
+        }
+
+        #upload-progress-window.dragging {
+            transition: none;
+        }
+
+        #upload-progress-window .upload-window-expanded {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+        }
+
+        #upload-progress-window .upload-window-collapsed {
+            display: none;
+        }
+
+        #upload-progress-window #upload-window-list {
+            transition: max-height 260ms cubic-bezier(0.16, 1, 0.3, 1), opacity 200ms ease-in-out;
+            max-height: 240px;
+            opacity: 1;
+        }
+
+        #upload-progress-window.collapsed {
+            width: 60px;
+            height: 60px;
+            border-radius: 9999px;
+            background: rgba(255, 255, 255, 0.34);
+            border-color: rgba(226, 232, 240, 0.55);
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18);
+            backdrop-filter: blur(22px) saturate(170%);
+            -webkit-backdrop-filter: blur(22px) saturate(170%);
+            overflow: visible;
+        }
+
+        #upload-progress-window.collapsed .upload-window-expanded {
+            display: none;
+        }
+
+        #upload-progress-window.collapsed .upload-window-collapsed {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            z-index: 0;
+        }
+
+        #upload-progress-window.collapsed .upload-window-collapsed i {
+            font-size: 22px;
+            color: rgba(37, 99, 235, 0.78);
+            position: relative;
+            z-index: 2;
+        }
+
+        #upload-progress-window.uploading.collapsed .upload-window-collapsed::after {
+            content: '';
+            position: absolute;
+            inset: -8px;
+            border-radius: 9999px;
+            border: 2px solid rgba(59, 130, 246, 0.45);
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.28);
+            animation: uploadPulse 2.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+            z-index: 1;
+        }
+
+        #upload-progress-window.uploading.collapsed .upload-window-collapsed .upload-pulse-ring {
+            position: absolute;
+            inset: -14px;
+            border-radius: 9999px;
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            animation: uploadPulseOuter 2.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        #upload-progress-window.uploading.collapsed .upload-window-collapsed::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 9999px;
+            border: 2px solid rgba(37, 99, 235, 0.55);
+            animation: uploadPulseInner 2.4s ease-in-out infinite;
+            z-index: 1;
+        }
+
+        #upload-progress-window.uploading.collapsed .upload-window-collapsed i {
+            animation: uploadFloat 2.4s ease-in-out infinite;
+        }
+
+        #upload-window-header {
+            cursor: grab;
+        }
+
+        #upload-progress-window.collapsed .upload-window-collapsed {
+            cursor: pointer;
+        }
+
+        #upload-progress-window.dragging #upload-window-header,
+        #upload-progress-window.dragging .upload-window-collapsed {
+            cursor: grabbing;
+        }
+
+        #upload-progress-window.expanded {
+            width: 320px;
+            background: rgba(255, 255, 255, 0.58);
+            border-color: rgba(226, 232, 240, 0.58);
+            box-shadow: 0 18px 36px rgba(15, 23, 42, 0.18);
+            backdrop-filter: blur(22px) saturate(170%);
+            -webkit-backdrop-filter: blur(22px) saturate(170%);
+        }
+
+        #upload-progress-window.expanded #upload-window-header {
+            background: rgba(248, 250, 252, 0.5);
+            border-color: rgba(226, 232, 240, 0.6);
+        }
+
+        #upload-progress-window.expanded #upload-window-list {
+            background: transparent;
+        }
+
+        #upload-progress-window.expanded #upload-window-list > div {
+            background: rgba(255, 255, 255, 0.38);
+        }
+
+        #upload-progress-window.expanded #upload-window-list > div:hover {
+            background: rgba(248, 250, 252, 0.6);
+        }
+
+        #upload-progress-window.expanded #upload-window-list {
+            max-height: 240px;
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        #upload-progress-window.collapsed #upload-window-list {
+            max-height: 0;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        @keyframes uploadPulse {
+            0% {
+                transform: scale(0.88);
+                opacity: 0.95;
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.35);
+            }
+            70% {
+                transform: scale(1.22);
+                opacity: 0;
+                box-shadow: 0 0 22px 8px rgba(59, 130, 246, 0);
+            }
+            100% {
+                transform: scale(1.22);
+                opacity: 0;
+            }
+        }
+
+        @keyframes uploadPulseOuter {
+            0% {
+                transform: scale(0.9);
+                opacity: 0.85;
+            }
+            65% {
+                transform: scale(1.45);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1.45);
+                opacity: 0;
+            }
+        }
+
+        @keyframes uploadPulseInner {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 0.75;
+            }
+            50% {
+                transform: scale(1.08);
+                opacity: 1;
+            }
+        }
+
+        @keyframes uploadFloat {
+            0%, 100% {
+                transform: translateY(0) scale(1);
+            }
+            50% {
+                transform: translateY(-5px) scale(1.06);
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-50 h-screen flex flex-col font-sans text-gray-700 overflow-hidden">
@@ -79,8 +276,34 @@
         </div>
     </div>
 
+    <!-- Upload Progress Floating Window -->
+    <div id="upload-progress-window" class="fixed rounded-lg shadow-xl border border-gray-200 z-50 transform translate-y-0 flex flex-col overflow-hidden collapsed" style="top: 16px; right: 24px;">
+        <div class="upload-window-collapsed">
+            <span class="upload-pulse-ring"></span>
+            <i class="fas fa-cloud-upload-alt"></i>
+        </div>
+        <div class="upload-window-expanded">
+            <div id="upload-window-header" class="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50">
+                <h4 class="text-sm font-bold text-gray-700 flex items-center">
+                    <i class="fas fa-cloud-upload-alt text-blue-500 mr-2"></i>
+                    <span id="upload-window-title">正在上传 (0/0)</span>
+                </h4>
+                <div class="flex items-center gap-2">
+                     <button onclick="toggleUploadWindowMinimize()" class="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none">
+                        <i id="upload-minimize-icon" class="fas fa-chevron-up text-xs"></i>
+                    </button>
+                    <button onclick="closeUploadWindow()" class="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="upload-window-list" class="max-h-60 overflow-y-auto p-0">
+            </div>
+        </div>
+    </div>
+
     <!-- Main Content Area -->
-    <div class="flex-1 p-4 overflow-hidden relative">
+    <div class="flex-1 p-4 overflow-hidden relative" id="knowledge-page-container">
         
         <!-- Tab 1: Knowledge Point Management -->
         <div id="view-management" class="bg-white rounded-xl shadow-sm border border-gray-200 h-full flex flex-col p-4 animate-fade-in">
@@ -2410,7 +2633,7 @@
         }
 
         function startAttachUpload() {
-            const name = document.getElementById('attach-upload-file-name').value;
+            const name = document.getElementById('attach-upload-file-name').value.trim();
             const desc = document.getElementById('attach-upload-desc').value;
             const keywords = document.getElementById('attach-upload-keywords').value;
 
@@ -2429,59 +2652,48 @@
                 return;
             }
 
-            // UI Update
-            document.getElementById('attach-upload-state-normal').classList.add('hidden');
-            document.getElementById('attach-upload-state-progress').classList.remove('hidden');
-            
-            const btnStart = document.getElementById('btn-start-attach-upload');
-            const btnCancel = document.getElementById('btn-cancel-attach-upload');
-            btnStart.disabled = true;
-            btnStart.classList.add('opacity-50', 'cursor-not-allowed');
-            btnStart.textContent = '上传中...';
-            btnCancel.disabled = true;
+            // Close Modal
+            closeAttachUploadModal();
 
-            // Simulate Progress
-            let progress = 0;
-            const interval = setInterval(() => {
-                progress += Math.random() * 10;
-                if (progress > 100) progress = 100;
-                
-                document.getElementById('attach-upload-progress-bar').style.width = `${progress}%`;
-                document.getElementById('attach-upload-progress-text').textContent = `${Math.round(progress)}%`;
-                
-                if (progress === 100) {
-                    clearInterval(interval);
-                    setTimeout(() => {
-                        // Append extension if file exists
-                        let finalName = name;
-                        if (currentAttachFile) {
-                            const lastDotIndex = currentAttachFile.name.lastIndexOf('.');
-                            if (lastDotIndex !== -1) {
-                                const ext = currentAttachFile.name.substring(lastDotIndex);
-                                if (!finalName.endsWith(ext)) {
-                                    finalName += ext;
-                                }
-                            }
-                        }
+            // Add to Queue
+            addToUploadQueue({
+                id: Date.now(),
+                type: 'attachment',
+                fileName: name,
+                status: 'pending',
+                progress: 0,
+                data: { name, desc, keywords, file: currentAttachFile }
+            });
 
-                        // Add to list
-                        const newItem = {
-                            id: Date.now(),
-                            name: finalName,
-                            desc: desc || '无描述',
-                            date: new Date().toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '/'),
-                            keywords: keywords || '无关键词',
-                            type: currentAttachFile && currentAttachFile.type.startsWith('video/') ? '视频' : '图片'
-                        };
-                        
-                        attachList.unshift(newItem); // Add to top
-                        renderAttachTable();
-                        
-                        showToast('附件已成功上传', 'success');
-                        closeAttachUploadModal();
-                    }, 500);
+            showToast('已加入后台上传队列', 'success');
+        }
+
+        function finishAttachUpload(data) {
+             // Append extension if file exists
+            let finalName = data.name;
+            if (data.file) {
+                const lastDotIndex = data.file.name.lastIndexOf('.');
+                if (lastDotIndex !== -1) {
+                    const ext = data.file.name.substring(lastDotIndex);
+                    if (!finalName.endsWith(ext)) {
+                        finalName += ext;
+                    }
                 }
-            }, 200);
+            }
+
+            // Add to list
+            const newItem = {
+                id: Date.now(),
+                name: finalName,
+                desc: data.desc || '无描述',
+                date: new Date().toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '/'),
+                keywords: data.keywords || '无关键词',
+                type: data.file && data.file.type.startsWith('video/') ? '视频' : '图片'
+            };
+            
+            attachList.unshift(newItem); // Add to top
+            renderAttachTable();
+            showToast('附件已成功上传', 'success');
         }
 
         // 2. Edit
@@ -2745,6 +2957,273 @@
             content.classList.remove('scale-95');
         }
 
+        // --- Upload Queue System ---
+        let uploadQueue = [];
+        let isUploading = false;
+        let isUploadWindowMinimized = true;
+        let isUploadWindowDragging = false;
+        let uploadWindowDragMoved = false;
+        let uploadWindowDragStartX = 0;
+        let uploadWindowDragStartY = 0;
+        let uploadWindowStartLeft = 0;
+        let uploadWindowStartTop = 0;
+
+        function addToUploadQueue(task) {
+            uploadQueue.push(task);
+            updateUploadWindow();
+            showUploadWindow();
+            processUploadQueue();
+        }
+
+        function showUploadWindow() {
+            const win = document.getElementById('upload-progress-window');
+            if (win) win.classList.remove('hidden', 'translate-y-4', 'opacity-0');
+        }
+
+        function updateUploadWindow() {
+            const win = document.getElementById('upload-progress-window');
+            const list = document.getElementById('upload-window-list');
+            const title = document.getElementById('upload-window-title');
+            
+            if (!win || !list || !title) return;
+
+            // Calculate Progress
+            const activeCount = uploadQueue.filter(t => t.status === 'pending' || t.status === 'uploading').length;
+            if (activeCount > 0) {
+                win.classList.add('uploading');
+            } else {
+                win.classList.remove('uploading');
+            }
+            
+            title.textContent = activeCount > 0 ? `正在上传 (${activeCount})` : '上传完成';
+            
+            // Render List
+            list.innerHTML = uploadQueue.map(task => `
+                <div class="p-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
+                    <div class="flex justify-between items-center mb-1">
+                        <div class="flex items-center gap-2 overflow-hidden max-w-[70%]">
+                            <i class="fas ${task.type === 'attachment' ? 'fa-paperclip' : 'fa-file-alt'} text-gray-400 text-xs shrink-0"></i>
+                            <span class="text-sm text-gray-700 truncate font-medium" title="${task.fileName}">${task.fileName}</span>
+                        </div>
+                        <span class="text-xs ${getStatusColor(task.status)} font-bold whitespace-nowrap ml-2 shrink-0">${getStatusText(task.status)}</span>
+                    </div>
+                    <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                        <div class="bg-blue-500 h-1.5 rounded-full transition-all duration-300" style="width: ${task.progress}%"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getStatusColor(status) {
+            if (status === 'pending') return 'text-gray-400';
+            if (status === 'uploading') return 'text-blue-500';
+            if (status === 'completed') return 'text-green-500';
+            return 'text-gray-400';
+        }
+
+        function getStatusText(status) {
+            if (status === 'pending') return '等待中';
+            if (status === 'uploading') return '上传中...';
+            if (status === 'completed') return '已完成';
+            return status;
+        }
+
+        function toggleUploadWindowMinimize() {
+            const icon = document.getElementById('upload-minimize-icon');
+            const win = document.getElementById('upload-progress-window');
+            
+            isUploadWindowMinimized = !isUploadWindowMinimized;
+            
+            if (isUploadWindowMinimized) {
+                icon.classList.remove('fa-minus');
+                icon.classList.add('fa-chevron-up');
+                win.classList.add('collapsed');
+                win.classList.remove('expanded');
+            } else {
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-minus');
+                win.classList.remove('collapsed');
+                win.classList.add('expanded');
+            }
+            clampUploadWindowToBounds();
+        }
+
+        function closeUploadWindow() {
+            const win = document.getElementById('upload-progress-window');
+            const uploading = uploadQueue.some(t => t.status === 'uploading');
+            
+            if (uploading) {
+                if(!confirm('正在上传中，确定要隐藏窗口吗？上传将继续在后台进行。')) return;
+            }
+            
+            win.classList.add('hidden');
+        }
+
+        function getUploadWindowBounds(win) {
+            const winRect = win.getBoundingClientRect();
+            const padding = 12;
+            const width = document.documentElement.clientWidth;
+            const height = document.documentElement.clientHeight;
+            const maxX = Math.max(padding, width - winRect.width - padding);
+            const maxY = Math.max(padding, height - winRect.height - padding);
+            return {
+                minX: padding,
+                maxX,
+                minY: padding,
+                maxY
+            };
+        }
+
+        function clampUploadWindowToBounds() {
+            const win = document.getElementById('upload-progress-window');
+            if (!win) return;
+            const bounds = getUploadWindowBounds(win);
+            const rect = win.getBoundingClientRect();
+            let nextLeft = rect.left;
+            let nextTop = rect.top;
+            nextLeft = Math.min(bounds.maxX, Math.max(bounds.minX, nextLeft));
+            nextTop = Math.min(bounds.maxY, Math.max(bounds.minY, nextTop));
+            win.style.left = `${nextLeft}px`;
+            win.style.top = `${nextTop}px`;
+            win.style.right = 'auto';
+            win.style.bottom = 'auto';
+        }
+
+        function setInitialUploadWindowPosition() {
+            const win = document.getElementById('upload-progress-window');
+            if (!win) return;
+            const offsetX = 24;
+            const offsetY = 16;
+            const bounds = getUploadWindowBounds(win);
+            let left = document.documentElement.clientWidth - win.offsetWidth - offsetX;
+            let top = offsetY;
+            left = Math.min(bounds.maxX, Math.max(bounds.minX, left));
+            top = Math.min(bounds.maxY, Math.max(bounds.minY, top));
+            win.style.left = `${left}px`;
+            win.style.top = `${top}px`;
+            win.style.right = 'auto';
+            win.style.bottom = 'auto';
+        }
+
+        function startUploadWindowDrag(e) {
+            if (e.button !== 0) return;
+            const win = document.getElementById('upload-progress-window');
+            if (!win) return;
+            const isCollapsed = win.classList.contains('collapsed');
+            if (!isCollapsed && e.target.closest('button')) return;
+            isUploadWindowDragging = true;
+            uploadWindowDragMoved = false;
+            win.classList.add('dragging');
+            const rect = win.getBoundingClientRect();
+            uploadWindowDragStartX = e.clientX;
+            uploadWindowDragStartY = e.clientY;
+            uploadWindowStartLeft = rect.left;
+            uploadWindowStartTop = rect.top;
+            document.addEventListener('mousemove', onUploadWindowDrag);
+            document.addEventListener('mouseup', stopUploadWindowDrag);
+        }
+
+        function onUploadWindowDrag(e) {
+            if (!isUploadWindowDragging) return;
+            const win = document.getElementById('upload-progress-window');
+            if (!win) return;
+            const dx = e.clientX - uploadWindowDragStartX;
+            const dy = e.clientY - uploadWindowDragStartY;
+            if (Math.abs(dx) > 3 || Math.abs(dy) > 3) uploadWindowDragMoved = true;
+            const bounds = getUploadWindowBounds(win);
+            let nextLeft = uploadWindowStartLeft + dx;
+            let nextTop = uploadWindowStartTop + dy;
+            nextLeft = Math.min(bounds.maxX, Math.max(bounds.minX, nextLeft));
+            nextTop = Math.min(bounds.maxY, Math.max(bounds.minY, nextTop));
+            win.style.left = `${nextLeft}px`;
+            win.style.top = `${nextTop}px`;
+            win.style.right = 'auto';
+            win.style.bottom = 'auto';
+        }
+
+        function stopUploadWindowDrag() {
+            if (!isUploadWindowDragging) return;
+            isUploadWindowDragging = false;
+            const win = document.getElementById('upload-progress-window');
+            if (win) win.classList.remove('dragging');
+            document.removeEventListener('mousemove', onUploadWindowDrag);
+            document.removeEventListener('mouseup', stopUploadWindowDrag);
+            setTimeout(() => {
+                uploadWindowDragMoved = false;
+            }, 0);
+        }
+
+        function initUploadWindow() {
+            const win = document.getElementById('upload-progress-window');
+            const icon = document.getElementById('upload-minimize-icon');
+            const header = document.getElementById('upload-window-header');
+            const collapsed = win ? win.querySelector('.upload-window-collapsed') : null;
+            if (!win || !icon) return;
+            isUploadWindowMinimized = true;
+            win.classList.add('collapsed');
+            win.classList.remove('expanded');
+            icon.classList.remove('fa-minus');
+            icon.classList.add('fa-chevron-up');
+            setInitialUploadWindowPosition();
+            if (header) header.addEventListener('mousedown', startUploadWindowDrag);
+            if (collapsed) collapsed.addEventListener('mousedown', startUploadWindowDrag);
+            if (collapsed) {
+                collapsed.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (uploadWindowDragMoved) return;
+                    toggleUploadWindowMinimize();
+                });
+            }
+            win.addEventListener('click', (e) => {
+                if (uploadWindowDragMoved) return;
+                if (!win.classList.contains('expanded')) return;
+                if (e.target.closest('button')) return;
+                toggleUploadWindowMinimize();
+            });
+            window.addEventListener('resize', () => {
+                clampUploadWindowToBounds();
+            });
+        }
+
+        function processUploadQueue() {
+            if (isUploading) return;
+            
+            const task = uploadQueue.find(t => t.status === 'pending');
+            if (!task) return;
+            
+            isUploading = true;
+            task.status = 'uploading';
+            updateUploadWindow();
+            
+            // Simulation
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.floor(Math.random() * 5) + 2; 
+                if (progress > 100) progress = 100;
+                
+                task.progress = progress;
+                updateUploadWindow();
+                
+                if (progress === 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        task.status = 'completed';
+                        updateUploadWindow();
+                        
+                        // Execute Finish Logic
+                        if (task.type === 'knowledge') {
+                            finishUpload(task.data);
+                        } else if (task.type === 'attachment') {
+                            finishAttachUpload(task.data);
+                        }
+                        
+                        isUploading = false;
+                        processUploadQueue(); 
+                    }, 500);
+                }
+            }, 300); 
+        }
+
         function startUpload() {
             const fileName = document.getElementById('upload-file-name').value.trim();
             const method = document.getElementById('upload-method-input').value;
@@ -2764,60 +3243,31 @@
                 return;
             }
             
-            // UI State Change
-            const btnStart = document.getElementById('btn-start-upload');
-            const btnCancel = document.getElementById('btn-cancel-upload');
-            btnStart.disabled = true;
-            btnCancel.disabled = true;
-            btnStart.classList.add('opacity-50', 'cursor-not-allowed');
-            
-            // Show Progress
-            document.getElementById('upload-state-normal').classList.add('hidden');
-            const progressState = document.getElementById('upload-state-progress');
-            progressState.classList.remove('hidden');
-            
-            const progressBar = document.getElementById('upload-progress-bar');
-            const progressText = document.getElementById('upload-progress-text');
-            
-            // Simulate Upload
-            let progress = 0;
-            const interval = setInterval(() => {
-                progress += Math.floor(Math.random() * 10) + 5;
-                if (progress > 100) progress = 100;
-                
-                progressBar.style.width = `${progress}%`;
-                progressText.textContent = `${progress}%`;
-                
-                if (progress === 100) {
-                    clearInterval(interval);
-                    setTimeout(() => {
-                        // Append extension if file exists
-                        let finalName = fileName;
-                        if (fileInput.files[0]) {
-                            const file = fileInput.files[0];
-                            const lastDotIndex = file.name.lastIndexOf('.');
-                            if (lastDotIndex !== -1) {
-                                const ext = file.name.substring(lastDotIndex);
-                                if (!finalName.endsWith(ext)) {
-                                    finalName += ext;
-                                }
-                            }
-                        }
+            // Close Modal
+            closeUploadModal();
 
-                        // Finish
-                        finishUpload({ fileName: finalName, method, strategy, maxChunk, minChunk, fixedChunk });
-                    }, 500);
-                }
-            }, 200);
+            // Add to Queue
+            addToUploadQueue({
+                id: Date.now(),
+                type: 'knowledge',
+                fileName: fileName,
+                status: 'pending',
+                progress: 0,
+                data: { fileName, method, strategy, maxChunk, minChunk, fixedChunk }
+            });
+
+            showToast('已加入后台上传队列', 'success');
         }
 
         function finishUpload(data) {
-            // Create New Item
+            const hasProcessing = kpList.some(item => item.status === '解析中');
+            const status = hasProcessing ? '待解析' : '解析中';
+            const statusColor = hasProcessing ? 'bg-green-100 text-green-600 border-green-200' : 'bg-orange-100 text-orange-600 border-orange-200';
             const newItem = {
-                id: Date.now(), // Unique ID
+                id: Date.now(),
                 name: data.fileName,
-                status: '待解析',
-                statusColor: 'bg-green-100 text-green-600 border-green-200',
+                status,
+                statusColor,
                 date: new Date().toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '/'),
                 timestamp: Date.now(),
                 enabled: false,
@@ -2957,6 +3407,7 @@
             renderKPTable();
             renderAttachTable();
             setPageTitle();
+            initUploadWindow();
 
             // Setup Upload Drag & Drop
             const dropZone = document.getElementById('upload-drop-zone');
